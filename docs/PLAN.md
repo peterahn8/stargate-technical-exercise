@@ -13,6 +13,44 @@ Paths below are relative to `tech_exercise/package/exercise1/api/`.
 
 ---
 
+## Acceptance criteria (rubric)
+
+The spec's **Rules** and **Requirements** are treated as acceptance criteria. Each row is worded as a testable statement and is traced to the plan items that implement it and the tests that prove it. The solution is done when every row is ✅ with at least one passing test.
+
+Status: ✅ met and tested · 🟡 works on the happy path / partially met · ❌ fails or missing · ⬜ not started
+
+### Rules
+
+| # | ID | Acceptance criterion | Plan items | Tests | Status |
+|---|----|----------------------|------------|-------|--------|
+| 1 | RULE-1 | A person is uniquely identified by name: creating a person whose name already exists is rejected, and the database enforces uniqueness. | B3, D4 | — | ❌ duplicates accepted |
+| 2 | RULE-2 | A person with no astronaut assignment has no `AstronautDetail` and no `AstronautDuty` rows; the API returns null astronaut fields for them. | — | — | 🟡 observed, untested |
+| 3 | RULE-3 | A person has at most one current duty (title, start date, rank), and `AstronautDetail` always reflects it. | B5, B12 | — | 🟡 a backdated duty becomes "current" |
+| 4 | RULE-4 | The current duty has no `DutyEndDate`; every other duty has one. | B5 | — | 🟡 breaks with backdating |
+| 5 | RULE-5 | When a new duty is received, the previous duty's `DutyEndDate` = new `DutyStartDate` − 1 day. | B5, D1 | — | ❌ backdating yields end < start |
+| 6 | RULE-6 | A person is classified as retired when their duty title is `RETIRED`. | B9, B10, D2, D4 | — | 🟡 case-sensitive; post-retirement duty undefined |
+| 7 | RULE-7 | Career end date = retired duty start date − 1 day. | B6 | — | ❌ wrong when RETIRED is the first duty |
+
+### API requirements
+
+| # | ID | Acceptance criterion | Plan items | Tests | Status |
+|---|----|----------------------|------------|-------|--------|
+| 8 | REQ-API-1 | Retrieve a person by name (404 or defined behaviour when not found; safe for any name). | B2, B7, D3 | — | 🟡 SQL injection; `O'Brien` → 500 |
+| 9 | REQ-API-2 | Retrieve all people. | — | — | 🟡 works, untested |
+| 10 | REQ-API-3 | Add or update a person by name. | B3, R1 | — | ❌ no update; duplicates accepted |
+| 11 | REQ-API-4 | Retrieve a person's astronaut duties by name. | B1, B7 | — | ❌ returns the person, not duties |
+| 12 | REQ-API-5 | Add an astronaut duty, applying RULE-3 to RULE-7. | B4–B6, B11, B12 | — | 🟡 rule violations above |
+
+### UI requirements
+
+| # | ID | Acceptance criterion | Plan items | Tests | Status |
+|---|----|----------------------|------------|-------|--------|
+| 13 | REQ-UI-1 | A production-quality web app (Angular). | UI1–UI6 | — | ⬜ |
+| 14 | REQ-UI-2 | The UI calls the API to retrieve an individual's astronaut duties. | UI3 | — | ⬜ |
+| 15 | REQ-UI-3 | The UI displays the progress of the process and its results in a visually polished way. | UI3, UI5 | — | ⬜ |
+
+---
+
 ## Phase 0 — Setup
 
 - [x] **S1** Add `.gitignore` (dotnet, node, coverage, SQLite, OS). Untrack the committed `bin/`, `obj/` and `tech_exercise_v.0.0.4.tgz`. Keep the shared `.idea/` files; Rider's own `.idea/.gitignore` already excludes `workspace.xml`.
