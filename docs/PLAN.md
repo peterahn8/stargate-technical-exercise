@@ -20,6 +20,7 @@ Code paths below are relative to `tech_exercise/package/exercise1/api/`. Repo-ro
 ### Status
 
 - **Acceptance criteria:** ✅ met and proven by a passing test · 🟡 partially met or untested · ❌ fails or missing · ⬜ not started
+  A criterion is ✅ only when its tests pass, none of its tagged tests is skipped, and none of its listed tasks is still open.
 - **Tasks:** ⬜ not started · ✅ done (with commit hash)
 
 ### Conventions
@@ -39,7 +40,7 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 | ID | Spec (verbatim) | Acceptance criterion (our interpretation) | Tasks / decisions | Tests | Status |
 |----|-----------------|-------------------------------------------|-------------------|-------|--------|
 | RULE-1 | A Person is uniquely identified by their Name. | A person is uniquely identified by name: *creating a person whose name already exists is rejected, and the database enforces uniqueness.* | T08, T11, T18, D4 | `AC=RULE-1` · 5 | 🟡 duplicates rejected, but as 500 rather than 400 (T21); names not yet trimmed (T18) |
-| RULE-2 | A Person who has not had an astronaut assignment will not have Astronaut records. | A person with no astronaut assignment has no `AstronautDetail` and no `AstronautDuty` rows; *the API returns null astronaut fields for them.* | T10, T23 | `AC=RULE-2` · 2 (+1 skipped) | 🟡 rank and title come back as `""`, not null (T23) |
+| RULE-2 | A Person who has not had an astronaut assignment will not have Astronaut records. | A person with no astronaut assignment has no `AstronautDetail` and no `AstronautDuty` rows; *the API returns null astronaut fields for them.* | T10, T23 | `AC=RULE-2` · 3 (+1 skipped) | 🟡 rank and title come back as `""`, not null (T23) |
 | RULE-3 | A Person will only ever hold one current Astronaut Duty Title, Start Date, and Rank at a time. | A person has at most one current duty (title, start date, rank), *and `AstronautDetail` always reflects it (spec Definitions #2).* | T10, T14, T20 | `AC=RULE-3` · 3 | 🟡 only gap: two simultaneous requests for one person (T20) |
 | RULE-4 | A Person's Current Duty will not have a Duty End Date. | The current duty has no `DutyEndDate`; *every other duty has one (inferred from RULE-5).* | T10, T14, T20 | `AC=RULE-4` · 3 | 🟡 only gap: two simultaneous requests for one person (T20) |
 | RULE-5 | A Person's Previous Duty End Date is set to the day before the New Astronaut Duty Start Date when a new Astronaut Duty is received for a Person. | When a new duty is received, the previous duty's `DutyEndDate` = new `DutyStartDate` − 1 day. *"Previous" means the current duty; a new duty must start strictly after it, otherwise it's rejected with 400 (D1).* | T10, T14, T20, D1 | `AC=RULE-5` · 3 | 🟡 only gap: two simultaneous requests for one person (T20) |
@@ -50,10 +51,10 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 
 | ID | Spec (verbatim) | Acceptance criterion (our interpretation) | Tasks / decisions | Tests | Status |
 |----|-----------------|-------------------------------------------|-------------------|-------|--------|
-| API-1 | Retrieve a person by name. | Retrieve a person by name, *safe for any name; an unknown name returns 404 (D3).* | T07, T11, T16, T21, D3 | `AC=API-1` · 5 (+2 skipped) | 🟡 unknown name → 200 with null (T16) |
+| API-1 | Retrieve a person by name. | Retrieve a person by name, *safe for any name; an unknown name returns 404 (D3).* | T07, T11, T16, T21, D3 | `AC=API-1` · 7 (+1 skipped) | 🟡 non-astronaut rank and title come back as `""` (T23); error responses (T21) |
 | API-2 | Retrieve all people. | Retrieve all people. | T11 | `AC=API-2` · 2 | ✅ |
 | API-3 | Add/update a person by name. | Add or update a person by name. | T08, T11, T25 | `AC=API-3` · 4 | ❌ no update (T25); duplicates rejected as 500 (T21) |
-| API-4 | Retrieve Astronaut Duty by name. | Retrieve *all of* a person's astronaut duties by name. *An unknown name returns 404; a known person with no astronaut records returns 200 with null astronaut fields and an empty duties list (D3).* | T06, T07, T11, T16, T21, T38 | `AC=API-4` · 4 (+2 skipped) | 🟡 returns duties; unknown name → 500 (T16) |
+| API-4 | Retrieve Astronaut Duty by name. | Retrieve *all of* a person's astronaut duties by name. *An unknown name returns 404; a known person with no astronaut records returns 200 with null astronaut fields and an empty duties list (D3).* | T06, T07, T11, T16, T21, T38 | `AC=API-4` · 8 | 🟡 duties returned as EF entities (T38); error responses (T21) |
 | API-5 | Add an Astronaut Duty. | Add an astronaut duty, *applying RULE-3 to RULE-7.* | T07, T10, T13–T15, T19–T21 | `AC=API-5` · 7 | 🟡 rule violations above |
 
 ### UI requirements
@@ -111,8 +112,8 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 |----|------|--------|
 | T13 | Scope the duplicate-duty check to the person; today it matches title + start date across everyone (`CreateAstronautDuty.cs:37`). *Superseded by T14: the check was removed, since T14's rule also rejects duplicates.* | ✅ `aeb7377` |
 | T14 | Reject backdated and same-day duties: in `CreateAstronautDutyPreProcessor`, a new duty's start date must be strictly after the person's current duty's start date, otherwise 400. Today the "previous" duty is simply the newest one and the new start date is never validated (`CreateAstronautDuty.cs:90-98`). → D1 | ✅ `8c325a8` |
-| T15 | In `CreateAstronautDutyPreProcessor`, reject with a 400: RETIRED as a person's first duty, and RETIRED for a person who is already retired. Today the code accepts it and sets `CareerEndDate` to the start date, breaking RULE-7 (`CreateAstronautDuty.cs:73`). → D2 | ✅ |
-| T16 | Not-found handling: both by-name query handlers return `Success = false`, `ResponseCode = 404` for an unknown name, through the existing `BaseResponse` wrapper. Today `GetPersonByName` returns 200 with `person: null`, and `GetAstronautDutiesByName` will throw a NullReferenceException once T06 routes to it (`GetAstronautDutiesByName.cs:34`). A known person with no astronaut records returns 200 with an empty duties list. → D3 | ⬜ |
+| T15 | In `CreateAstronautDutyPreProcessor`, reject with a 400: RETIRED as a person's first duty, and RETIRED for a person who is already retired. Today the code accepts it and sets `CareerEndDate` to the start date, breaking RULE-7 (`CreateAstronautDuty.cs:73`). → D2 | ✅ `703fe5a` |
+| T16 | Not-found handling: both by-name query handlers return `Success = false`, `ResponseCode = 404` for an unknown name, through the existing `BaseResponse` wrapper. Today `GetPersonByName` returns 200 with `person: null`, and `GetAstronautDutiesByName` will throw a NullReferenceException once T06 routes to it (`GetAstronautDutiesByName.cs:34`). A known person with no astronaut records returns 200 with an empty duties list. → D3 | ✅ |
 | T17 | Return to service: when a non-RETIRED duty arrives for a retired person, end the RETIRED duty as usual (RULE-5), make the new duty current, and clear `CareerEndDate`. `CareerStartDate` is unchanged. A later RETIRED duty sets `CareerEndDate` again. Today `CareerEndDate` stays set alongside an active title. → D2 | ⬜ |
 | T18 | Trim incoming names and duty titles. Compare the `RETIRED` title ignoring case (store it as received), by changing `DutyTitles.IsRetired`, the single place it's decided. Test that `john` finds `John` and that `Retired` retires. → D4 | ⬜ |
 | T19 | Make `DutyStartDate` required and validate the inputs (empty names or titles; today a missing date silently defaults to `0001-01-01`). | ⬜ |
@@ -124,7 +125,7 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 |----|------|--------|
 | T21 | Consistent error handling. `CreateAstronautDuty` has no try/catch and leaks stack traces; the other actions catch everything, return 500 and leak `ex.Message`. Replace with a global exception handler: validation → 400, anything unexpected → 500 with a generic message. (Not found is a result, not an exception; see D3.) | ⬜ |
 | T22 | Make the pre-processors async (they currently call EF synchronously). | ⬜ |
-| T23 | Resolve the 12 nullable warnings (the `Person` navigation properties, the possibly-null `person` dereferences). Make `PersonAstronaut.CurrentRank` and `CurrentDutyTitle` `string?`, so a non-astronaut gets `null` rather than `""` (RULE-2). | ⬜ |
+| T23 | Resolve the nullable warnings: 6 distinct at the start, 2 left after T16 (the `Person` navigation properties on `AstronautDetail` and `AstronautDuty`). Make `PersonAstronaut.CurrentRank` and `CurrentDutyTitle` `string?`, so a non-astronaut gets `null` rather than `""` (RULE-2). | ⬜ |
 | T24 | Add `ProducesResponseType` attributes and XML comments for Swagger. | ⬜ |
 | T38 | Return duties as an `AstronautDutyDto` (matching how `PersonAstronaut` works for people) rather than the `AstronautDuty` EF entity, which leaks its `Person` link as `"person": null` and ties the API's response shape to the database entity (`GetAstronautDutiesByName.cs:48`). | ⬜ |
 

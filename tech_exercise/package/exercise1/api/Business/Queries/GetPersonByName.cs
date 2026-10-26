@@ -3,6 +3,7 @@ using MediatR;
 using StargateAPI.Business.Data;
 using StargateAPI.Business.Dtos;
 using StargateAPI.Controllers;
+using System.Net;
 
 namespace StargateAPI.Business.Queries
 {
@@ -28,6 +29,14 @@ namespace StargateAPI.Business.Queries
             var person = await _context.Connection.QueryAsync<PersonAstronaut>(query, new { request.Name });
 
             result.Person = person.FirstOrDefault();
+
+            // Not found is an expected outcome, returned as a result rather than thrown (D3).
+            if (result.Person is null)
+            {
+                result.Success = false;
+                result.ResponseCode = (int)HttpStatusCode.NotFound;
+                result.Message = $"Person '{request.Name}' not found.";
+            }
 
             return result;
         }

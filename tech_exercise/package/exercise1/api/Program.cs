@@ -40,4 +40,5 @@ app.MapControllers();
 
 app.Run();
 
-
+// Exposes the generated Program class to the tests' WebApplicationFactory.
+public partial class Program { }

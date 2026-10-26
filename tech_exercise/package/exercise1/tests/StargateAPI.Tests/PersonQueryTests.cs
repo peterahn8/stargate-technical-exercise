@@ -88,7 +88,7 @@ namespace StargateAPI.Tests
             Assert.Null(result.Person);
         }
 
-        [Fact(Skip = "Pending T16 (D3): an unknown name returns 200 with a null person")]
+        [Fact]
         [Trait("AC", "API-1")]
         public async Task GetPersonByName_UnknownName_ReturnsNotFound()
         {

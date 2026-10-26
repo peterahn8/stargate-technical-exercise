@@ -20,6 +20,7 @@ namespace StargateAPI.Tests
 
             var result = await _host.Send(new GetAstronautDutiesByName { Name = "John Doe" });
 
+            Assert.NotNull(result.Person);
             Assert.Equal("John Doe", result.Person.Name);
             Assert.Equal("CPT", result.Person.CurrentRank);
             Assert.Equal(
@@ -52,6 +53,7 @@ namespace StargateAPI.Tests
             var result = await _host.Send(new GetAstronautDutiesByName { Name = "Jane Doe" });
 
             Assert.True(result.Success);
+            Assert.NotNull(result.Person);
             Assert.Equal("Jane Doe", result.Person.Name);
             Assert.Empty(result.AstronautDuties);
         }
@@ -66,11 +68,12 @@ namespace StargateAPI.Tests
 
             var result = await _host.Send(new GetAstronautDutiesByName { Name = "JACK O'NEILL" });
 
+            Assert.NotNull(result.Person);
             Assert.Equal("Jack O'Neill", result.Person.Name);
             Assert.Single(result.AstronautDuties);
         }
 
-        [Fact(Skip = "Pending T16 (D3): an unknown name throws a NullReferenceException")]
+        [Fact]
         [Trait("AC", "API-4")]
         public async Task GetAstronautDutiesByName_UnknownName_ReturnsNotFound()
         {
@@ -80,7 +83,7 @@ namespace StargateAPI.Tests
             Assert.Equal(404, result.ResponseCode);
         }
 
-        [Fact(Skip = "Pending T16 (D3): an unknown name throws a NullReferenceException")]
+        [Fact]
         [Trait("AC", "API-4")]
         public async Task GetAstronautDutiesByName_SqlInjectionAttempt_FindsNoOne()
         {
