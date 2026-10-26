@@ -10,7 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ApiError } from '../../core/api/api-error';
 import { AstronautDutyService } from '../../core/api/astronaut-duty.service';
-import { AstronautDuty } from '../../core/api/models';
+import { AstronautDuty, NewDuty } from '../../core/api/models';
 import { dayAfter } from '../../core/duration';
 import { dutyRules, notBlank, toIsoDate } from '../../core/validators';
 
@@ -20,7 +20,7 @@ export interface AddDutyData {
   currentDuty: AstronautDuty | null;
 }
 
-/** Adds a duty for a person. Closes with true once the API has accepted it (T33). */
+/** Adds a duty for a person. Closes with the added duty once the API has accepted it (T33). */
 @Component({
   selector: 'app-add-duty-dialog',
   imports: [
@@ -40,7 +40,7 @@ export interface AddDutyData {
 export class AddDutyDialog {
   protected readonly data = inject<AddDutyData>(MAT_DIALOG_DATA);
   private readonly dutyService = inject(AstronautDutyService);
-  private readonly dialogRef = inject<MatDialogRef<AddDutyDialog, boolean>>(MatDialogRef);
+  private readonly dialogRef = inject<MatDialogRef<AddDutyDialog, NewDuty>>(MatDialogRef);
 
   protected readonly form = new FormGroup(
     {
@@ -66,21 +66,20 @@ export class AddDutyDialog {
     }
 
     const { rank, dutyTitle, dutyStartDate } = this.form.getRawValue();
+    const duty: NewDuty = {
+      name: this.data.name,
+      rank: rank.trim(),
+      dutyTitle: dutyTitle.trim(),
+      dutyStartDate: toIsoDate(dutyStartDate!),
+    };
     this.saving.set(true);
     this.error.set(null);
-    this.dutyService
-      .addDuty({
-        name: this.data.name,
-        rank: rank.trim(),
-        dutyTitle: dutyTitle.trim(),
-        dutyStartDate: toIsoDate(dutyStartDate!),
-      })
-      .subscribe({
-        next: () => this.dialogRef.close(true),
-        error: (error: ApiError) => {
-          this.error.set(error.message);
-          this.saving.set(false);
-        },
-      });
+    this.dutyService.addDuty(duty).subscribe({
+      next: () => this.dialogRef.close(duty),
+      error: (error: ApiError) => {
+        this.error.set(error.message);
+        this.saving.set(false);
+      },
+    });
   }
 }

@@ -45,9 +45,22 @@
     <span>{{ message }}</span>
     <button mat-button type="button" (click)="people.reload()">Retry</button>
   </div>
-} @else if (!people.isLoading() && total() === 0) {
+} @else if (total() === 0 && people.isLoading()) {
+  <!-- First load: placeholders in the shape of the table. Reloads keep the table visible instead. -->
+  <div class="skeleton-rows" aria-hidden="true">
+    @for (row of skeletonRows; track row) {
+      <div class="skeleton-row">
+        <span class="skeleton name"></span>
+        <span class="skeleton"></span>
+        <span class="skeleton"></span>
+        <span class="skeleton"></span>
+      </div>
+    }
+  </div>
+  <span class="visually-hidden" role="status">Loading people…</span>
+} @else if (total() === 0) {
   <p class="empty">No one has been added yet.</p>
-} @else if (!people.isLoading()) {
+} @else {
   <p class="count">Showing {{ visible().length }} of {{ total() }}</p>
 
   <div class="table-scroll">
@@ -97,7 +110,12 @@
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="columns"></tr>
-      <tr mat-row class="row" *matRowDef="let person; columns: columns" (click)="open(person)"></tr>
+      <tr
+        mat-row
+        class="row"
+        *matRowDef="let person; columns: columns"
+        (click)="open(person.name)"
+      ></tr>
     </table>
   </div>
 

@@ -5,10 +5,13 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatButtonHarness } from '@angular/material/button/testing';
 import { MatChipListboxHarness } from '@angular/material/chips/testing';
+import { MATERIAL_ANIMATIONS } from '@angular/material/core';
+import { MatDialog } from '@angular/material/dialog';
 import { MatInputHarness } from '@angular/material/input/testing';
 import { MatProgressBarHarness } from '@angular/material/progress-bar/testing';
 import { MatTableHarness } from '@angular/material/table/testing';
 import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
 import { apiErrorInterceptor } from '../../core/api/api-error';
 import { PersonAstronaut } from '../../core/api/models';
 import { PeopleList } from './people-list';
@@ -161,5 +164,66 @@ describe('[UI-1] PeopleList', () => {
     await respondWith({ people, success: true });
 
     expect(await column('name')).toHaveLength(4);
+  });
+});
+
+describe('[UI-3] PeopleList progress and results', () => {
+  let fixture: ComponentFixture<PeopleList>;
+  let http: HttpTestingController;
+
+  beforeEach(async () => {
+    TestBed.configureTestingModule({
+      imports: [PeopleList],
+      providers: [
+        provideHttpClient(withInterceptors([apiErrorInterceptor])),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        { provide: MATERIAL_ANIMATIONS, useValue: { animationsDisabled: true } },
+        // The add-person dialog itself is tested in dialogs.spec.ts; here it just adds Samantha.
+        {
+          provide: MatDialog,
+          useValue: { open: () => ({ afterClosed: () => of('Samantha Carter') }) },
+        },
+      ],
+    });
+    fixture = TestBed.createComponent(PeopleList);
+    http = TestBed.inject(HttpTestingController);
+    TestBed.tick(); // Starts the first load; see above.
+  });
+
+  afterEach(() => http.verify());
+
+  function element(): HTMLElement {
+    return fixture.nativeElement as HTMLElement;
+  }
+
+  it('shows placeholder rows, and tells screen readers, until the people first arrive', async () => {
+    // No whenStable() yet: the request is still unanswered (see above). TestBed.tick() has rendered.
+    expect(element().querySelectorAll('.skeleton-row')).toHaveLength(4);
+    expect(element().querySelector('[role=status]')?.textContent).toContain('Loading people');
+
+    http.expectOne('/api/Person').flush({ people, success: true });
+    await fixture.whenStable();
+
+    expect(element().querySelector('.skeleton-row')).toBeNull();
+  });
+
+  it('confirms a new person, keeping the table visible while it reloads', async () => {
+    http.expectOne('/api/Person').flush({ people, success: true });
+    await fixture.whenStable();
+
+    element().querySelector<HTMLButtonElement>('.page-header button')!.click();
+    TestBed.tick();
+
+    // Reloading: the table stays, with the progress bar above it, and no placeholders.
+    expect(element().querySelector('table')).not.toBeNull();
+    expect(element().querySelector('.skeleton-row')).toBeNull();
+    expect(element().querySelector('mat-progress-bar')).not.toBeNull();
+    expect(document.querySelector('mat-snack-bar-container')?.textContent).toContain(
+      'Samantha Carter added.',
+    );
+
+    http.expectOne('/api/Person').flush({ people, success: true });
+    await fixture.whenStable();
   });
 });

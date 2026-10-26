@@ -5,10 +5,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { AstronautDutyService } from '../../core/api/astronaut-duty.service';
-import { astronautStatus, statusLabels } from '../../core/astronaut-status';
+import { AstronautDuty, NewDuty } from '../../core/api/models';
+import { astronautStatus, isRetiredTitle, statusLabels } from '../../core/astronaut-status';
 import { dayAfter, describeDuration } from '../../core/duration';
 import { AddDutyData, AddDutyDialog } from './add-duty-dialog';
 import { toTimeline } from './duty-timeline';
@@ -27,6 +29,7 @@ export class PersonDetail {
   private readonly dutyService = inject(AstronautDutyService);
   private readonly title = inject(Title);
   private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
 
   protected readonly details = rxResource({
     params: () => this.name(),
@@ -38,6 +41,7 @@ export class PersonDetail {
   );
   protected readonly errorMessage = computed(() => this.details.error()?.message);
   protected readonly timeline = computed(() => toTimeline(this.result()?.astronautDuties ?? []));
+  protected readonly skeletonCards = [1, 2, 3];
 
   protected readonly status = computed(() => {
     const person = this.result()?.person;
@@ -64,16 +68,30 @@ export class PersonDetail {
       return;
     }
 
+    // Duties arrive newest first, so the first is the current one.
+    const currentDuty = result.astronautDuties[0] ?? null;
     this.dialog
-      .open<AddDutyDialog, AddDutyData, boolean>(AddDutyDialog, {
-        // Duties arrive newest first, so the first is the current one.
-        data: { name: result.person.name, currentDuty: result.astronautDuties[0] ?? null },
+      .open<AddDutyDialog, AddDutyData, NewDuty>(AddDutyDialog, {
+        data: { name: result.person.name, currentDuty },
       })
       .afterClosed()
       .subscribe((added) => {
-        if (added) {
-          this.details.reload();
+        if (!added) {
+          return;
         }
+        this.details.reload();
+        this.snackBar.open(describeAddedDuty(added, currentDuty), undefined, { duration: 6000 });
       });
   }
+}
+
+/** A confirmation that names what happened to the person's career (RULE-6, D2). */
+export function describeAddedDuty(added: NewDuty, previous: AstronautDuty | null): string {
+  if (isRetiredTitle(added.dutyTitle)) {
+    return `${added.name} retired.`;
+  }
+  if (isRetiredTitle(previous?.dutyTitle)) {
+    return `${added.name} returned to service as ${added.dutyTitle}.`;
+  }
+  return `${added.dutyTitle} added for ${added.name}.`;
 }

@@ -8,6 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { Router, RouterLink } from '@angular/router';
 import { PersonAstronaut } from '../../core/api/models';
@@ -38,6 +39,7 @@ export class PeopleList {
   private readonly peopleService = inject(PeopleService);
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
 
   protected readonly people = rxResource({
     stream: () => this.peopleService.getPeople(),
@@ -47,6 +49,7 @@ export class PeopleList {
   protected readonly statusFilter = signal<StatusFilter>('all');
 
   protected readonly columns = ['name', 'rank', 'title', 'career', 'status'];
+  protected readonly skeletonRows = [1, 2, 3, 4];
   protected readonly filterOptions: { value: StatusFilter; label: string }[] = [
     { value: 'all', label: 'All' },
     { value: 'active', label: statusLabels.active },
@@ -94,13 +97,18 @@ export class PeopleList {
       .open<AddPersonDialog, void, string>(AddPersonDialog)
       .afterClosed()
       .subscribe((name) => {
-        if (name) {
-          this.people.reload();
+        if (!name) {
+          return;
         }
+        this.people.reload();
+        this.snackBar
+          .open(`${name} added.`, 'View', { duration: 6000 })
+          .onAction()
+          .subscribe(() => this.open(name));
       });
   }
 
-  protected open(person: PersonAstronaut): void {
-    void this.router.navigate(['/people', person.name]);
+  protected open(name: string): void {
+    void this.router.navigate(['/people', name]);
   }
 }

@@ -9,7 +9,7 @@ import { MatDatepickerInputHarness } from '@angular/material/datepicker/testing'
 import { MatDialog } from '@angular/material/dialog';
 import { MatInputHarness } from '@angular/material/input/testing';
 import { apiErrorInterceptor } from '../../core/api/api-error';
-import { AstronautDuty } from '../../core/api/models';
+import { AstronautDuty, NewDuty } from '../../core/api/models';
 import { AddDutyData, AddDutyDialog } from './add-duty-dialog';
 import { AddPersonDialog } from './add-person-dialog';
 
@@ -113,12 +113,12 @@ describe('[UI-1] AddDutyDialog', () => {
     dutyStartDate: '2023-01-01T00:00:00',
     dutyEndDate: null,
   };
-  let result: boolean | undefined | null;
+  let result: NewDuty | undefined | null;
 
   async function open(currentDuty: AstronautDuty | null): Promise<void> {
     result = null;
     TestBed.inject(MatDialog)
-      .open<AddDutyDialog, AddDutyData, boolean>(AddDutyDialog, {
+      .open<AddDutyDialog, AddDutyData, NewDuty>(AddDutyDialog, {
         data: { name: 'John Doe', currentDuty },
       })
       .afterClosed()
@@ -138,7 +138,7 @@ describe('[UI-1] AddDutyDialog', () => {
     expect(dialogText()).toContain('Current duty: Commander (CPT), since Jan 1, 2023');
   });
 
-  it('adds the duty with an ISO start date and closes', async () => {
+  it('adds the duty with an ISO start date and closes with it', async () => {
     await open(commander);
     await fill(' Pilot ', ' MAJ ', '6/1/2025');
 
@@ -153,7 +153,12 @@ describe('[UI-1] AddDutyDialog', () => {
     request.flush({ id: 10, success: true });
     await fixture.whenStable();
 
-    expect(result).toBe(true);
+    expect(result).toEqual({
+      name: 'John Doe',
+      rank: 'MAJ',
+      dutyTitle: 'Pilot',
+      dutyStartDate: '2025-06-01',
+    });
   });
 
   it("catches a duty that doesn't start after the current one before calling the API", async () => {
@@ -194,16 +199,14 @@ describe('[UI-1] AddDutyDialog', () => {
     await fill('Pilot', 'CPT', '1/1/2024');
 
     await submit();
-    http
-      .expectOne('/api/AstronautDuty')
-      .flush(
-        {
-          success: false,
-          message: 'The request conflicts with existing data. Please retry.',
-          responseCode: 409,
-        },
-        { status: 409, statusText: 'Conflict' },
-      );
+    http.expectOne('/api/AstronautDuty').flush(
+      {
+        success: false,
+        message: 'The request conflicts with existing data. Please retry.',
+        responseCode: 409,
+      },
+      { status: 409, statusText: 'Conflict' },
+    );
     await fixture.whenStable();
 
     expect(dialogText()).toContain('The request conflicts with existing data. Please retry.');

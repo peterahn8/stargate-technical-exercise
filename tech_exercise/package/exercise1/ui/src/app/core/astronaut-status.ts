@@ -9,12 +9,17 @@ export const statusLabels: Record<AstronautStatus, string> = {
 };
 
 /**
- * A person's astronaut status, decided by their current duty (RULE-6, D2). RETIRED is compared
- * ignoring case, as the API does (D4).
+ * Whether a duty title means retirement (RULE-6), ignoring case and surrounding spaces as the API does
+ * (D4). The UI's single place for this, like DutyTitles.IsRetired in the API.
  */
+export function isRetiredTitle(title: string | null | undefined): boolean {
+  return title?.trim().toLowerCase() === 'retired';
+}
+
+/** A person's astronaut status, decided by their current duty (RULE-6, D2). */
 export function astronautStatus(person: PersonAstronaut): AstronautStatus {
   if (!person.currentDutyTitle) {
     return 'none';
   }
-  return person.currentDutyTitle.toLowerCase() === 'retired' ? 'retired' : 'active';
+  return isRetiredTitle(person.currentDutyTitle) ? 'retired' : 'active';
 }

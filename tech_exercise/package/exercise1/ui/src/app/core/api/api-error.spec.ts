@@ -54,12 +54,25 @@ describe('[UI-3] apiErrorInterceptor', () => {
     expect(error.message).toBe("The API couldn't be reached. Is it running?");
   });
 
+  it.each([502, 503, 504])(
+    'explains a gateway error with no API message (%i) as the API being unreachable',
+    async (status) => {
+      // The dev server's proxy answers this way when the API isn't running.
+      const error = await failure((url) =>
+        http.expectOne(url).flush('', { status, statusText: 'Gateway error' }),
+      );
+
+      expect(error.status).toBe(status);
+      expect(error.message).toBe("The API couldn't be reached. Is it running?");
+    },
+  );
+
   it('falls back to the status code when the response has no message', async () => {
     const error = await failure((url) =>
-      http.expectOne(url).flush('Bad Gateway', { status: 502, statusText: 'Bad Gateway' }),
+      http.expectOne(url).flush('Internal Server Error', { status: 500, statusText: 'Error' }),
     );
 
-    expect(error.status).toBe(502);
-    expect(error.message).toBe('The request failed (HTTP 502).');
+    expect(error.status).toBe(500);
+    expect(error.message).toBe('The request failed (HTTP 500).');
   });
 });

@@ -30,7 +30,9 @@ function toApiError(error: unknown): ApiError {
     return new ApiError(error.status, body.message);
   }
 
-  return error.status === 0
-    ? new ApiError(0, "The API couldn't be reached. Is it running?")
+  // Status 0 means the browser couldn't connect. Through the dev server's proxy, a stopped API shows up
+  // as a gateway error (502-504) instead, without the API's message.
+  return error.status === 0 || [502, 503, 504].includes(error.status)
+    ? new ApiError(error.status, "The API couldn't be reached. Is it running?")
     : new ApiError(error.status, `The request failed (HTTP ${error.status}).`);
 }

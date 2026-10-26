@@ -1,11 +1,14 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MATERIAL_ANIMATIONS } from '@angular/material/core';
+import { MatDialog } from '@angular/material/dialog';
 import { Title } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
 import { apiErrorInterceptor } from '../../core/api/api-error';
-import { GetAstronautDutiesResult } from '../../core/api/models';
-import { PersonDetail } from './person-detail';
+import { AstronautDuty, GetAstronautDutiesResult, NewDuty } from '../../core/api/models';
+import { describeAddedDuty, PersonDetail } from './person-detail';
 
 // George Hammond from the seed data: retired in 2013, back in service since 2016.
 const george: GetAstronautDutiesResult = {
@@ -128,17 +131,15 @@ describe('[UI-2] PersonDetail', () => {
 
   it("shows the API's message and a way back for an unknown person", async () => {
     await open('Nobody', (url) =>
-      http
-        .expectOne(url)
-        .flush(
-          {
-            person: null,
-            success: false,
-            message: "Person 'Nobody' not found.",
-            responseCode: 404,
-          },
-          { status: 404, statusText: 'Not Found' },
-        ),
+      http.expectOne(url).flush(
+        {
+          person: null,
+          success: false,
+          message: "Person 'Nobody' not found.",
+          responseCode: 404,
+        },
+        { status: 404, statusText: 'Not Found' },
+      ),
     );
 
     expect(texts('.error .message')).toEqual(["Person 'Nobody' not found."]);
@@ -150,4 +151,98 @@ describe('[UI-2] PersonDetail', () => {
 
     expect(TestBed.inject(Title).getTitle()).toBe('George Hammond · Stargate');
   });
+});
+
+describe('[UI-3] PersonDetail progress and results', () => {
+  let fixture: ComponentFixture<PersonDetail>;
+  let http: HttpTestingController;
+  let added: NewDuty;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [PersonDetail],
+      providers: [
+        provideHttpClient(withInterceptors([apiErrorInterceptor])),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        { provide: MATERIAL_ANIMATIONS, useValue: { animationsDisabled: true } },
+        // The add-duty dialog itself is tested in dialogs.spec.ts; here it returns `added`.
+        { provide: MatDialog, useValue: { open: () => ({ afterClosed: () => of(added) }) } },
+      ],
+    });
+    fixture = TestBed.createComponent(PersonDetail);
+    http = TestBed.inject(HttpTestingController);
+    fixture.componentRef.setInput('name', 'George Hammond');
+    TestBed.tick();
+  });
+
+  afterEach(() => http.verify());
+
+  function element(): HTMLElement {
+    return fixture.nativeElement as HTMLElement;
+  }
+
+  it('shows a placeholder page, and tells screen readers, until the duties first arrive', async () => {
+    // No whenStable() yet: the request is still unanswered (see above). TestBed.tick() has rendered.
+    expect(element().querySelectorAll('.skeleton.card')).toHaveLength(3);
+    expect(element().querySelector('[role=status]')?.textContent).toContain('Loading duties');
+
+    http.expectOne('/api/AstronautDuty/George%20Hammond').flush(george);
+    await fixture.whenStable();
+
+    expect(element().querySelector('.skeleton')).toBeNull();
+  });
+
+  it('confirms a new duty and reloads, keeping the page visible', async () => {
+    http.expectOne('/api/AstronautDuty/George%20Hammond').flush(george);
+    await fixture.whenStable();
+    added = {
+      name: 'George Hammond',
+      rank: 'MG',
+      dutyTitle: 'RETIRED',
+      dutyStartDate: '2026-11-01',
+    };
+
+    element().querySelector<HTMLButtonElement>('.add-duty')!.click();
+    TestBed.tick();
+
+    expect(element().querySelector('h1')?.textContent).toBe('George Hammond');
+    expect(element().querySelector('.skeleton')).toBeNull();
+    expect(document.querySelector('mat-snack-bar-container')?.textContent).toContain(
+      'George Hammond retired.',
+    );
+
+    http.expectOne('/api/AstronautDuty/George%20Hammond').flush(george);
+    await fixture.whenStable();
+  });
+});
+
+describe('[UI-3] describeAddedDuty', () => {
+  const commander: AstronautDuty = {
+    id: 1,
+    rank: 'CPT',
+    dutyTitle: 'Commander',
+    dutyStartDate: '2023-01-01T00:00:00',
+    dutyEndDate: null,
+  };
+  const retired: AstronautDuty = { ...commander, dutyTitle: 'RETIRED' };
+
+  it('names a retirement', () => {
+    expect(describeAddedDuty({ ...duty('Retired') }, commander)).toBe('John Doe retired.');
+  });
+
+  it('names a return to service (D2)', () => {
+    expect(describeAddedDuty(duty('Commander'), retired)).toBe(
+      'John Doe returned to service as Commander.',
+    );
+  });
+
+  it('names an ordinary new duty, including a first one', () => {
+    expect(describeAddedDuty(duty('Pilot'), commander)).toBe('Pilot added for John Doe.');
+    expect(describeAddedDuty(duty('Pilot'), null)).toBe('Pilot added for John Doe.');
+  });
+
+  function duty(title: string): NewDuty {
+    return { name: 'John Doe', rank: 'MAJ', dutyTitle: title, dutyStartDate: '2025-01-01' };
+  }
 });

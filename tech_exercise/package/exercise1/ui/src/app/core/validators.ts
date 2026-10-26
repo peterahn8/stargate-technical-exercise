@@ -1,5 +1,6 @@
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { AstronautDuty } from './api/models';
+import { isRetiredTitle } from './astronaut-status';
 
 /** Required, and not just spaces: the API trims input and rejects blank text (D13). */
 export const notBlank: ValidatorFn = (control: AbstractControl<string>): ValidationErrors | null =>
@@ -14,12 +15,12 @@ export function dutyRules(currentDuty: AstronautDuty | null): ValidatorFn {
   return (form: AbstractControl): ValidationErrors | null => {
     const title: string = form.get('dutyTitle')?.value ?? '';
     const start: Date | null = form.get('dutyStartDate')?.value ?? null;
-    const retiring = title.trim().toLowerCase() === 'retired';
+    const retiring = isRetiredTitle(title);
 
     if (retiring && !currentDuty) {
       return { dutyRule: "RETIRED can't be a person's first duty." };
     }
-    if (retiring && currentDuty?.dutyTitle.toLowerCase() === 'retired') {
+    if (retiring && isRetiredTitle(currentDuty?.dutyTitle)) {
       return { dutyRule: 'The person is already retired.' };
     }
     if (start && currentDuty && toIsoDate(start) <= currentDuty.dutyStartDate.slice(0, 10)) {

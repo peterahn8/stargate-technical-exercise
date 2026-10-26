@@ -1,4 +1,5 @@
 import { AstronautDuty } from '../../core/api/models';
+import { isRetiredTitle } from '../../core/astronaut-status';
 import { dayAfter, describeDuration } from '../../core/duration';
 
 export interface TimelineEntry {
@@ -16,21 +17,16 @@ export interface TimelineEntry {
 export function toTimeline(duties: AstronautDuty[], today = new Date()): TimelineEntry[] {
   return duties.map((duty, index) => {
     const previous = duties[index + 1]; // The one before it in time.
-    const retired = isRetired(duty);
+    const retired = isRetiredTitle(duty.dutyTitle);
     return {
       duty,
       current: duty.dutyEndDate === null,
       retired,
-      returnedToService: !retired && previous !== undefined && isRetired(previous),
+      returnedToService: !retired && isRetiredTitle(previous?.dutyTitle),
       duration: describeDuration(
         new Date(duty.dutyStartDate),
         duty.dutyEndDate ? dayAfter(duty.dutyEndDate) : today,
       ),
     };
   });
-}
-
-// RETIRED is compared ignoring case, as the API does (D4).
-function isRetired(duty: AstronautDuty): boolean {
-  return duty.dutyTitle.toLowerCase() === 'retired';
 }

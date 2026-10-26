@@ -62,9 +62,9 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 
 | ID | Spec (verbatim) | Acceptance criterion (our interpretation) | Tasks / decisions | Tests | Status |
 |----|-----------------|-------------------------------------------|-------------------|-------|--------|
-| UI-1 | Successfully implement a web application that demonstrates production level quality. Angular is preferred. | A production-quality web application, built in Angular (the preferred option). | T30–T35, T40, T41 | `[UI-1]` · 33 | 🟡 people list, person page and forms done; progress states, tests, rename and activity feed still to come (T34, T35, T40, T41) |
+| UI-1 | Successfully implement a web application that demonstrates production level quality. Angular is preferred. | A production-quality web application, built in Angular (the preferred option). | T30–T35, T40, T41 | `[UI-1]` · 33 | 🟡 all pages, forms and progress states done; tests, rename and activity feed still to come (T35, T40, T41) |
 | UI-2 | Implement call(s) to retrieve an individual's astronaut duties. | The UI calls the API to retrieve an individual's astronaut duties. | T26, T30, T32 | `[UI-2]` · 8 | ✅ |
-| UI-3 | Display the progress of the process and the results in a visually sophisticated and appealing manner. | The UI shows the progress of each request *(loading, empty and error states)* and its results in a visually sophisticated and appealing way. | T30, T32, T34, T41 | `[UI-3]` · 12 | 🟡 the duty timeline shows the results; progress states and the activity feed are still to come (T34, T41) |
+| UI-3 | Display the progress of the process and the results in a visually sophisticated and appealing manner. | The UI shows the progress of each request *(loading, empty and error states)* and its results in a visually sophisticated and appealing way. | T30, T32, T34, T41 | `[UI-3]` · 22 | 🟡 progress states and results are done; the activity feed is still to come (T41) |
 
 ### Spec tasks
 
@@ -152,8 +152,8 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 | T30 | Scaffold the Angular 22 app in `exercise1/ui` (standalone components, signals, no zone.js, strict mode, SCSS, Vitest) with Angular Material 22; add the app shell, typed API services (`PeopleService`, `AstronautDutyService`, all calls under `/api`) and an interceptor that turns every failure into an `ApiError` carrying the API's own message. → D18 | ✅ `665cf95` |
 | T31 | People list: a Material table (name, rank, current duty, career dates, status chip) sorted by name; search as you type on name, rank or title; status filter chips; loading bar, error with Retry, and empty states. Rows link to `/people/:name`. Lazy-loaded, to keep the initial bundle within budget; rank and career are hidden on phones. | ✅ `45603ea` |
 | T32 | Person detail at `/people/:name`: name, status, current rank and duty, career dates and length; the duty history as a vertical timeline, newest first, with each duty's dates and duration, the current duty highlighted, RETIRED flagged and "Returned to service" tagged. Non-astronauts and unknown names (the API's 404 message) are handled; the browser tab shows the person's name. | ✅ `c60c7ab` |
-| T33 | Forms, as dialogs: *Add person* on the list and *Add duty* on the person page. Validation mirrors the API's rules with its own wording (blank text, D13; start after the current duty, D1; RETIRED rules, D2), and the date picker won't offer dates before the current duty. Anything the API still rejects shows its message in the dialog. On success the page reloads. | ✅ |
-| T34 | Progress and result states: progress bar and loading skeletons, buttons disabled while saving, empty and error states, and snackbars with the API's messages. *(Spec: "display the progress of the process")* → D18 | ⬜ |
+| T33 | Forms, as dialogs: *Add person* on the list and *Add duty* on the person page. Validation mirrors the API's rules with its own wording (blank text, D13; start after the current duty, D1; RETIRED rules, D2), and the date picker won't offer dates before the current duty. Anything the API still rejects shows its message in the dialog. On success the page reloads. | ✅ `18329d2` |
+| T34 | Progress and result states: loading skeletons on a page's first load (announced to screen readers), with reloads keeping the content visible under a progress bar; buttons disabled while saving; empty and error states; and success snackbars that name what happened ("John Doe retired.", "… returned to service as Commander."). A stopped API now reads "The API couldn't be reached. Is it running?" rather than "HTTP 502". *(Spec: "display the progress of the process")* → D18 | ✅ |
 | T35 | Frontend tests for the services and key components (Vitest; `describe` names carry the requirement ID). → D18 | ⬜ |
 | T40 | Rename a person from the UI, using `PUT /Person/{name}` (T25). → D18 | ⬜ |
 | T41 | Activity feed: a read-only `GET /ProcessLog` endpoint (most recent first) and a UI panel showing recent operations with outcome and duration. → D17, D18 | ⬜ |
@@ -163,7 +163,7 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 | ID | Task | Status |
 |----|------|--------|
 | T39 | Test `DevelopmentSeeder`: the seeded data follows the rules (one current duty per astronaut, each previous duty ends the day before the next starts, career end the day before RETIRED), and a second run adds nothing. Tag `AC=SPEC-1`. Expected to lift line coverage to about 91%. | ⬜ |
-| T36 | Update the README with run instructions (API, database, UI, tests) and a summary of the changes. | ⬜ |
+| T36 | Update the README with run instructions (API, database, UI, tests) and a summary of the changes. Make it clear that the UI needs the API running in a second terminal (no combined start script). | ⬜ |
 | T37 | Make the repo public and share the link (do **not** fork the original). | ⬜ |
 
 ---

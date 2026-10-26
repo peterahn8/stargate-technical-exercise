@@ -94,3 +94,21 @@
     display: none;
   }
 }
+
+.skeleton-rows {
+  margin-top: 36px;
+  border-radius: 12px;
+  background: var(--mat-sys-surface-container-lowest);
+}
+
+.skeleton-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 2fr 2fr;
+  gap: 24px;
+  padding: 18px 16px;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+
+  .name {
+    width: 70%;
+  }
+}

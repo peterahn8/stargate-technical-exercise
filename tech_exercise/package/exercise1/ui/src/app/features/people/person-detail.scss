@@ -155,3 +155,28 @@ h2 {
 .empty {
   color: var(--mat-sys-on-surface-variant);
 }
+
+.skeleton-page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  .title {
+    width: 240px;
+    height: 32px;
+  }
+
+  .line {
+    width: 180px;
+  }
+
+  .short {
+    width: 280px;
+  }
+
+  .card {
+    height: 64px;
+    margin-left: 40px;
+    border-radius: 12px;
+  }
+}

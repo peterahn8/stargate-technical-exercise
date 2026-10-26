@@ -85,4 +85,15 @@
       </ol>
     }
   </section>
+} @else if (details.isLoading()) {
+  <!-- First load: placeholders in the shape of the page. Reloads keep the page visible instead. -->
+  <div class="skeleton-page" aria-hidden="true">
+    <span class="skeleton title"></span>
+    <span class="skeleton line"></span>
+    <span class="skeleton line short"></span>
+    @for (card of skeletonCards; track card) {
+      <span class="skeleton card"></span>
+    }
+  </div>
+  <span class="visually-hidden" role="status">Loading duties…</span>
 }
