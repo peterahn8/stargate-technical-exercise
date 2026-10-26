@@ -25,7 +25,7 @@ namespace StargateAPI.Tests
             Assert.Equal(1, _host.Db(db => db.AstronautDuties.Count()));
         }
 
-        [Fact(Skip = "Pending T13: the duplicate-duty check matches other people's duties")]
+        [Fact]
         [Trait("AC", "API-5")]
         public async Task CreateAstronautDuty_SameTitleAndDateAsAnotherPersonsDuty_IsAccepted()
         {

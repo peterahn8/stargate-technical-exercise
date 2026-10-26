@@ -54,7 +54,7 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 | API-2 | Retrieve all people. | Retrieve all people. | T11 | `AC=API-2` · 2 | ✅ |
 | API-3 | Add/update a person by name. | Add or update a person by name. | T08, T11, T25 | `AC=API-3` · 4 | ❌ no update (T25); duplicates rejected as 500 (T21) |
 | API-4 | Retrieve Astronaut Duty by name. | Retrieve *all of* a person's astronaut duties by name. *An unknown name returns 404; a known person with no astronaut records returns 200 with null astronaut fields and an empty duties list (D3).* | T06, T07, T11, T16, T21, T38 | `AC=API-4` · 4 (+2 skipped) | 🟡 returns duties; unknown name → 500 (T16) |
-| API-5 | Add an Astronaut Duty. | Add an astronaut duty, *applying RULE-3 to RULE-7.* | T07, T10, T13–T15, T19–T21 | `AC=API-5` · 6 (+1 skipped) | 🟡 rule violations above |
+| API-5 | Add an Astronaut Duty. | Add an astronaut duty, *applying RULE-3 to RULE-7.* | T07, T10, T13–T15, T19–T21 | `AC=API-5` · 7 | 🟡 rule violations above |
 
 ### UI requirements
 
@@ -103,13 +103,13 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 | T09 | Create an xUnit test project with in-memory SQLite (a real provider, so the Dapper SQL runs) and coverlet for coverage. Run from `tech_exercise/package/exercise1/`: `dotnet test Stargate.sln`; one criterion: `--filter "AC=RULE-1"`; coverage: `--collect:"XPlat Code Coverage"`, then `dotnet reportgenerator -reports:"tests/StargateAPI.Tests/TestResults/*/coverage.cobertura.xml" -targetdir:coverage -reporttypes:Html`. → D8, D11 | ✅ `19aac51` |
 | T10 | Tests for `CreateAstronautDutyHandler`: first duty, a subsequent duty, RETIRED as the first duty, RETIRED after other duties, backdated duty, unknown person. Tests for behaviour not built yet are skipped with `Skip = "Pending Tnn …"`; the fixing task removes the skip first. → D12 | ✅ `868d15c` |
 | T11 | Tests for the pre-processors (person and duty) and for the queries (found and not found). | ✅ `5206e2a` |
-| T12 | Reach >50% coverage. Record the number here: **63.1% line, 75% branch** (2026-10-25, after T11; generated migrations excluded). Every handler and pre-processor is at 100%; the controllers are at 0% until the HTTP-level tests (T16, T21). Re-measure at wrap-up (T36). | ✅ |
+| T12 | Reach >50% coverage. Record the number here: **63.1% line, 75% branch** (2026-10-25, after T11; generated migrations excluded). Every handler and pre-processor is at 100%; the controllers are at 0% until the HTTP-level tests (T16, T21). Re-measure at wrap-up (T36). | ✅ `fe00dd6` |
 
 ### Phase 3 — Enforce the rules
 
 | ID | Task | Status |
 |----|------|--------|
-| T13 | Scope the duplicate-duty check to the person; today it matches title + start date across everyone (`CreateAstronautDuty.cs:37`). | ⬜ |
+| T13 | Scope the duplicate-duty check to the person; today it matches title + start date across everyone (`CreateAstronautDuty.cs:37`). | ✅ |
 | T14 | Reject backdated and same-day duties: in `CreateAstronautDutyPreProcessor`, a new duty's start date must be strictly after the person's current duty's start date, otherwise 400. Today the "previous" duty is simply the newest one and the new start date is never validated (`CreateAstronautDuty.cs:90-98`). → D1 | ⬜ |
 | T15 | In `CreateAstronautDutyPreProcessor`, reject with a 400: RETIRED as a person's first duty, and RETIRED for a person who is already retired. Today the code accepts it and sets `CareerEndDate` to the start date, breaking RULE-7 (`CreateAstronautDuty.cs:73`). → D2 | ⬜ |
 | T16 | Not-found handling: both by-name query handlers return `Success = false`, `ResponseCode = 404` for an unknown name, through the existing `BaseResponse` wrapper. Today `GetPersonByName` returns 200 with `person: null`, and `GetAstronautDutiesByName` will throw a NullReferenceException once T06 routes to it (`GetAstronautDutiesByName.cs:34`). A known person with no astronaut records returns 200 with an empty duties list. → D3 | ⬜ |
