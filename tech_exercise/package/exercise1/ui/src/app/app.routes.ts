@@ -8,6 +8,10 @@ export const routes: Routes = [
     title: 'People · Stargate',
     loadComponent: () => import('./features/people/people-list').then((m) => m.PeopleList),
   },
-  // Until the person detail page exists (T32), and for any unknown address, show the list.
+  {
+    // The page sets its own title once the person's name is known.
+    path: 'people/:name',
+    loadComponent: () => import('./features/people/person-detail').then((m) => m.PersonDetail),
+  },
   { path: '**', redirectTo: 'people' },
 ];

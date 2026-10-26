@@ -1,0 +1,84 @@
+<a mat-button class="back" routerLink="/people">
+  <mat-icon>arrow_back</mat-icon>
+  People
+</a>
+
+<div class="progress">
+  @if (details.isLoading()) {
+    <mat-progress-bar mode="indeterminate" aria-label="Loading duties" />
+  }
+</div>
+
+@if (errorMessage(); as message) {
+  <div class="error" role="alert">
+    <mat-icon aria-hidden="true">error</mat-icon>
+    <span class="message">{{ message }}</span>
+    <a mat-button routerLink="/people">Back to people</a>
+  </div>
+} @else if (result(); as result) {
+  <header class="person">
+    <div class="title-row">
+      <h1>{{ result.person.name }}</h1>
+      <span class="status" [class]="'status status-' + status()">{{ statusLabel() }}</span>
+    </div>
+
+    @if (result.person.currentDutyTitle) {
+      <p class="current">{{ result.person.currentRank }} · {{ result.person.currentDutyTitle }}</p>
+      <p class="career">
+        Career: {{ result.person.careerStartDate | date: 'mediumDate' }} –
+        {{
+          result.person.careerEndDate
+            ? (result.person.careerEndDate | date: 'mediumDate')
+            : 'present'
+        }}
+        · {{ careerLength() }}
+      </p>
+    } @else {
+      <p class="current">Not an astronaut yet.</p>
+    }
+  </header>
+
+  <section aria-labelledby="history-heading">
+    <h2 id="history-heading">Duty history</h2>
+
+    @if (timeline().length === 0) {
+      <p class="empty">No astronaut duties yet.</p>
+    } @else {
+      <ol class="timeline">
+        @for (entry of timeline(); track entry.duty.id) {
+          <li class="entry" [class.current]="entry.current" [class.retired]="entry.retired">
+            <span class="marker" aria-hidden="true">
+              <mat-icon>{{
+                entry.retired
+                  ? 'flag'
+                  : entry.current
+                    ? 'radio_button_checked'
+                    : 'radio_button_unchecked'
+              }}</mat-icon>
+            </span>
+
+            <div class="card">
+              <div class="heading">
+                <span class="duty-title">{{ entry.duty.dutyTitle }}</span>
+                <span class="rank">{{ entry.duty.rank }}</span>
+                @if (entry.current) {
+                  <span class="tag tag-current">Current</span>
+                }
+                @if (entry.returnedToService) {
+                  <span class="tag tag-returned">Returned to service</span>
+                }
+              </div>
+              <div class="dates">
+                {{ entry.duty.dutyStartDate | date: 'mediumDate' }} –
+                {{
+                  entry.duty.dutyEndDate ? (entry.duty.dutyEndDate | date: 'mediumDate') : 'present'
+                }}
+                · {{ entry.duration }}
+              </div>
+            </div>
+          </li>
+        }
+      </ol>
+    }
+  </section>
+}

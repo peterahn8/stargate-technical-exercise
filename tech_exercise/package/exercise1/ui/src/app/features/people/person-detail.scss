@@ -1,0 +1,153 @@
+.back {
+  margin-left: -12px;
+}
+
+// Reserves the progress bar's height, so the page doesn't jump when loading starts and stops.
+.progress {
+  height: 4px;
+  margin: 8px 0;
+}
+
+.person {
+  margin-bottom: 24px;
+
+  .title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+
+  h1 {
+    font: var(--mat-sys-headline-medium);
+    margin: 0;
+  }
+
+  .current {
+    font: var(--mat-sys-title-medium);
+    margin: 8px 0 0;
+  }
+
+  .career {
+    color: var(--mat-sys-on-surface-variant);
+    margin: 4px 0 0;
+  }
+}
+
+h2 {
+  font: var(--mat-sys-title-large);
+  margin: 0 0 12px;
+}
+
+// A vertical line with one marker and card per duty, newest at the top.
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.entry {
+  position: relative;
+  display: flex;
+  gap: 16px;
+  padding-bottom: 16px;
+
+  // The line joining this marker to the next (older) one.
+  &:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    top: 28px;
+    bottom: 0;
+    left: 11px;
+    width: 2px;
+    background: var(--mat-sys-outline-variant);
+  }
+}
+
+.marker {
+  flex: none;
+  color: var(--mat-sys-outline);
+  padding-top: 2px;
+}
+
+.card {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--mat-sys-surface-container-low);
+}
+
+.entry.current {
+  .marker {
+    color: var(--mat-sys-primary);
+  }
+
+  .card {
+    background: var(--mat-sys-primary-container);
+    color: var(--mat-sys-on-primary-container);
+  }
+}
+
+.entry.retired {
+  .marker {
+    color: var(--mat-sys-tertiary);
+  }
+
+  .card {
+    background: var(--mat-sys-tertiary-container);
+    color: var(--mat-sys-on-tertiary-container);
+  }
+}
+
+.heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+
+  .duty-title {
+    font: var(--mat-sys-title-medium);
+  }
+
+  .rank {
+    font: var(--mat-sys-label-large);
+    opacity: 0.8;
+  }
+}
+
+.tag {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font: var(--mat-sys-label-small);
+}
+
+.tag-current {
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+}
+
+.tag-returned {
+  background: var(--mat-sys-secondary);
+  color: var(--mat-sys-on-secondary);
+}
+
+.dates {
+  margin-top: 4px;
+  font: var(--mat-sys-body-medium);
+  opacity: 0.85;
+}
+
+.error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}
+
+.empty {
+  color: var(--mat-sys-on-surface-variant);
+}
