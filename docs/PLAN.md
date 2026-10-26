@@ -15,8 +15,10 @@ Paths below are relative to `tech_exercise/package/exercise1/api/`.
 
 ## Phase 0 — Setup
 
-- [ ] **S1** Add `.gitignore` (dotnet + node + IDE). Untrack the committed `bin/`, `obj/`, `.idea/`, `.DS_Store` and `tech_exercise_v.0.0.4.tgz`.
-- [ ] **S2** Install `dotnet-ef` (`dotnet tool install -g dotnet-ef --version 8.*`). Generate the database with `dotnet ef database update`. *(Spec task 1)*
+- [x] **S1** Add `.gitignore` (dotnet, node, coverage, SQLite, OS). Untrack the committed `bin/`, `obj/` and `tech_exercise_v.0.0.4.tgz`. Keep the shared `.idea/` files; Rider's own `.idea/.gitignore` already excludes `workspace.xml`.
+- [ ] **S2** Generate the database. *(Spec task 1)* → D7
+  - Apply migrations at startup, in Development only (`db.Database.Migrate()`), so a fresh clone needs only `dotnet run`. Add a comment explaining why: migrating at startup is avoided in production because multiple instances can race.
+  - `dotnet-ef` (`dotnet tool install -g dotnet-ef --version 8.*`) is needed only to *author* new migrations.
 - [ ] **S3** Decide on seed data: re-enable it with fixed dates or add a dev-only seeder (`StargateContext.cs:22`, which currently uses `DateTime.Now`). → D5
 - [ ] **S4** Fix the model/migration drift: `AstronautDetail.CareerStartDate` is non-nullable in the model but nullable in the migration and snapshot.
 
@@ -91,6 +93,7 @@ Each entry records a choice, why it was made, and what was rejected. The exercis
 | D4 | Are names and `RETIRED` case-sensitive? | _TBD_ | |
 | D5 | Seed data — migration `HasData`, or a dev-only seeder? | _TBD_ | |
 | D6 | Keep the Dapper-for-reads / EF-for-writes split, or consolidate? | _TBD_ | |
+| D7 | Commit `starbase.db`, or ignore it? | **Ignore** (`*.db` in `.gitignore`). Migrations are the only source of truth; a dev-only startup migration plus a seeder (S2, S3) keeps a clone runnable. | A committed database would drift from the migrations and churn on every run, especially once process logging (L1–L3) writes rows on each request. Binary diffs can't be reviewed. |
 
 ## Log
 

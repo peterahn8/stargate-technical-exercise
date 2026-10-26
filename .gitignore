@@ -1,0 +1,28 @@
+# .NET build output
+bin/
+obj/
+*.user
+*.suo
+
+# Test / coverage output
+TestResults/
+coverage/
+*.coverage
+coverage*.xml
+coverage*.json
+
+# SQLite database (generated from migrations — see docs/PLAN.md S2)
+*.db
+*.db-shm
+*.db-wal
+
+# Node / Angular
+node_modules/
+dist/
+.angular/
+
+# OS
+.DS_Store
+
+# Archives (exercise source tarball; contents live in tech_exercise/)
+*.tgz
