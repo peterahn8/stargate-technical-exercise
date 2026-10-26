@@ -38,6 +38,34 @@ namespace StargateAPI.Tests
             Assert.Equal(2, _host.Db(db => db.AstronautDuties.Count()));
         }
 
+        [Theory]
+        [InlineData("  ", "CPT", "Commander")]
+        [InlineData("John Doe", " ", "Commander")]
+        [InlineData("John Doe", "CPT", "")]
+        [Trait("AC", "API-5")]
+        public async Task CreateAstronautDuty_BlankText_IsRejected(string name, string rank, string title)
+        {
+            await _host.CreatePerson("John Doe");
+
+            await Assert.ThrowsAsync<BadHttpRequestException>(
+                () => _host.AddDuty(name, rank, title, new DateTime(2024, 1, 1)));
+
+            Assert.Equal(0, _host.Db(db => db.AstronautDuties.Count()));
+        }
+
+        [Fact]
+        [Trait("AC", "API-5")]
+        public async Task CreateAstronautDuty_MissingStartDate_IsRejected()
+        {
+            // A person with no duties, where the default 0001-01-01 used to be accepted.
+            await _host.CreatePerson("John Doe");
+
+            await Assert.ThrowsAsync<BadHttpRequestException>(
+                () => _host.AddDuty("John Doe", "CPT", "Commander", default));
+
+            Assert.Equal(0, _host.Db(db => db.AstronautDuties.Count()));
+        }
+
         [Fact]
         [Trait("AC", "RULE-1")]
         [Trait("AC", "API-5")]

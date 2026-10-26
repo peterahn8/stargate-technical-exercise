@@ -53,6 +53,17 @@ namespace StargateAPI.Tests
             Assert.Equal(1, _host.Db(db => db.People.Count()));
         }
 
+        [Theory]
+        [InlineData("")]
+        [InlineData("   ")]
+        [Trait("AC", "API-3")]
+        public async Task CreatePerson_BlankName_IsRejected(string name)
+        {
+            await Assert.ThrowsAsync<BadHttpRequestException>(() => _host.CreatePerson(name));
+
+            Assert.Equal(0, _host.Db(db => db.People.Count()));
+        }
+
         [Fact]
         [Trait("AC", "API-3")]
         public async Task CreatePerson_NameWithApostrophe_IsStored()

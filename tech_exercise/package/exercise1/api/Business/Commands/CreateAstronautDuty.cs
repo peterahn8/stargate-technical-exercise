@@ -20,7 +20,7 @@ namespace StargateAPI.Business.Commands
 
         public required string DutyTitle { get => _dutyTitle; set => _dutyTitle = value?.Trim() ?? string.Empty; }
 
-        public DateTime DutyStartDate { get; set; }
+        public required DateTime DutyStartDate { get; set; }
     }
 
     public class CreateAstronautDutyPreProcessor : IRequestPreProcessor<CreateAstronautDuty>
@@ -34,6 +34,12 @@ namespace StargateAPI.Business.Commands
 
         public Task Process(CreateAstronautDuty request, CancellationToken cancellationToken)
         {
+            // Input is already trimmed (D4), so blank text arrives here as empty.
+            if (string.IsNullOrEmpty(request.Name)) throw new BadHttpRequestException("A name is required.");
+            if (string.IsNullOrEmpty(request.Rank)) throw new BadHttpRequestException("A rank is required.");
+            if (string.IsNullOrEmpty(request.DutyTitle)) throw new BadHttpRequestException("A duty title is required.");
+            if (request.DutyStartDate == default) throw new BadHttpRequestException("A duty start date is required.");
+
             var person = _context.People.AsNoTracking().FirstOrDefault(z => z.Name == request.Name);
 
             if (person is null) throw new BadHttpRequestException("Bad Request");
