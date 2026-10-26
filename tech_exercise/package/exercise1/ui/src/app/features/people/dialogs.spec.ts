@@ -12,6 +12,7 @@ import { apiErrorInterceptor } from '../../core/api/api-error';
 import { AstronautDuty, NewDuty } from '../../core/api/models';
 import { AddDutyData, AddDutyDialog } from './add-duty-dialog';
 import { AddPersonDialog } from './add-person-dialog';
+import { RenamePersonData, RenamePersonDialog } from './rename-person-dialog';
 
 /** Something to attach the dialogs to; they render in an overlay at the document root. */
 @Component({ template: '' })
@@ -210,6 +211,63 @@ describe('[UI-1] AddDutyDialog', () => {
     await fixture.whenStable();
 
     expect(dialogText()).toContain('The request conflicts with existing data. Please retry.');
+    expect(result).toBeNull();
+  });
+});
+
+describe('[UI-1] RenamePersonDialog', () => {
+  let result: string | undefined | null;
+
+  beforeEach(async () => {
+    result = null;
+    TestBed.inject(MatDialog)
+      .open<RenamePersonDialog, RenamePersonData, string>(RenamePersonDialog, {
+        data: { name: 'John Doe' },
+      })
+      .afterClosed()
+      .subscribe((newName) => (result = newName));
+    await fixture.whenStable();
+  });
+
+  it('starts with the current name', async () => {
+    expect(await (await input('newName')).getValue()).toBe('John Doe');
+  });
+
+  it('renames with PUT and closes with the trimmed new name', async () => {
+    await (await input('newName')).setValue('  Jonathan Doe ');
+
+    await submit();
+    const request = http.expectOne({ method: 'PUT', url: '/api/Person/John%20Doe' });
+    expect(request.request.body).toBe('"Jonathan Doe"');
+    request.flush({ id: 2, success: true });
+    await fixture.whenStable();
+
+    expect(result).toBe('Jonathan Doe');
+  });
+
+  it("doesn't call the API for a blank name", async () => {
+    await (await input('newName')).setValue(' ');
+
+    await submit();
+    await fixture.whenStable();
+
+    expect(dialogText()).toContain('A new name is required.');
+    http.expectNone('/api/Person/John%20Doe');
+  });
+
+  it("shows the API's message and stays open when the name is taken", async () => {
+    await (await input('newName')).setValue('Jane Doe');
+
+    await submit();
+    http
+      .expectOne('/api/Person/John%20Doe')
+      .flush(
+        { success: false, message: "A person named 'Jane Doe' already exists.", responseCode: 409 },
+        { status: 409, statusText: 'Conflict' },
+      );
+    await fixture.whenStable();
+
+    expect(dialogText()).toContain("A person named 'Jane Doe' already exists.");
     expect(result).toBeNull();
   });
 });

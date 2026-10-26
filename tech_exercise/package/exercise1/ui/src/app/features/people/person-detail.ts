@@ -7,12 +7,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Title } from '@angular/platform-browser';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AstronautDutyService } from '../../core/api/astronaut-duty.service';
 import { AstronautDuty, NewDuty } from '../../core/api/models';
 import { astronautStatus, isRetiredTitle, statusLabels } from '../../core/astronaut-status';
 import { dayAfter, describeDuration } from '../../core/duration';
 import { AddDutyData, AddDutyDialog } from './add-duty-dialog';
+import { RenamePersonData, RenamePersonDialog } from './rename-person-dialog';
 import { toTimeline } from './duty-timeline';
 
 /** A person's current astronaut details and their duty history as a timeline (T32, UI-2, UI-3). */
@@ -30,6 +31,7 @@ export class PersonDetail {
   private readonly title = inject(Title);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly router = inject(Router);
 
   protected readonly details = rxResource({
     params: () => this.name(),
@@ -60,6 +62,26 @@ export class PersonDetail {
 
   constructor() {
     effect(() => this.title.setTitle(`${this.result()?.person.name ?? this.name()} · Stargate`));
+  }
+
+  protected rename(): void {
+    const name = this.result()?.person.name;
+    if (!name) {
+      return;
+    }
+
+    this.dialog
+      .open<RenamePersonDialog, RenamePersonData, string>(RenamePersonDialog, { data: { name } })
+      .afterClosed()
+      .subscribe((newName) => {
+        if (!newName || newName === name) {
+          return;
+        }
+        // The page's address is the name, so move to the new one. replaceUrl keeps the old,
+        // now-missing name out of the browser history.
+        void this.router.navigate(['/people', newName], { replaceUrl: true });
+        this.snackBar.open(`${name} renamed to ${newName}.`, undefined, { duration: 6000 });
+      });
   }
 
   protected addDuty(): void {

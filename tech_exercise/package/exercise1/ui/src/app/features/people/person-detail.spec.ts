@@ -4,7 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MATERIAL_ANIMATIONS } from '@angular/material/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Title } from '@angular/platform-browser';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { apiErrorInterceptor } from '../../core/api/api-error';
 import { AstronautDuty, GetAstronautDutiesResult, NewDuty } from '../../core/api/models';
@@ -276,4 +276,60 @@ describe('[UI-3] describeAddedDuty', () => {
   function duty(title: string): NewDuty {
     return { name: 'John Doe', rank: 'MAJ', dutyTitle: title, dutyStartDate: '2025-01-01' };
   }
+});
+
+describe('[UI-1] PersonDetail rename', () => {
+  let fixture: ComponentFixture<PersonDetail>;
+  let http: HttpTestingController;
+  let newName: string | undefined;
+
+  beforeEach(async () => {
+    TestBed.configureTestingModule({
+      imports: [PersonDetail],
+      providers: [
+        provideHttpClient(withInterceptors([apiErrorInterceptor])),
+        provideHttpClientTesting(),
+        provideRouter([{ path: 'people/:name', component: PersonDetail }]),
+        { provide: MATERIAL_ANIMATIONS, useValue: { animationsDisabled: true } },
+        // The rename dialog itself is tested in dialogs.spec.ts; here it returns `newName`.
+        { provide: MatDialog, useValue: { open: () => ({ afterClosed: () => of(newName) }) } },
+      ],
+    });
+    fixture = TestBed.createComponent(PersonDetail);
+    http = TestBed.inject(HttpTestingController);
+    fixture.componentRef.setInput('name', 'George Hammond');
+    TestBed.tick();
+    http.expectOne('/api/AstronautDuty/George%20Hammond').flush(george);
+    await fixture.whenStable();
+  });
+
+  afterEach(() => http.verify());
+
+  function clickRename(): void {
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.rename')!.click();
+    TestBed.tick();
+  }
+
+  it("moves to the new name's address and confirms the rename", async () => {
+    newName = 'General Hammond';
+
+    clickRename();
+    await fixture.whenStable();
+
+    expect(TestBed.inject(Router).url).toBe('/people/General%20Hammond');
+    expect(document.querySelector('mat-snack-bar-container')?.textContent).toContain(
+      'George Hammond renamed to General Hammond.',
+    );
+  });
+
+  it('stays put when the name is unchanged or the dialog is cancelled', async () => {
+    for (const result of ['George Hammond', undefined]) {
+      newName = result;
+      clickRename();
+      await fixture.whenStable();
+    }
+
+    expect(TestBed.inject(Router).url).toBe('/');
+    expect(document.querySelector('mat-snack-bar-container')).toBeNull();
+  });
 });

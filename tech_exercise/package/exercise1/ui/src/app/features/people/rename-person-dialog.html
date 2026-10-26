@@ -1,0 +1,29 @@
+<h2 mat-dialog-title>Rename {{ data.name }}</h2>
+
+<form [formGroup]="form" (ngSubmit)="save()">
+  <mat-dialog-content>
+    <p class="context">Their duties and astronaut details are kept.</p>
+
+    <mat-form-field appearance="outline">
+      <mat-label>New name</mat-label>
+      <input matInput cdkFocusInitial autocomplete="off" formControlName="newName" />
+      <mat-hint>Names are unique, ignoring case. Changing only the case is allowed.</mat-hint>
+      @if (form.controls.newName.hasError('required')) {
+        <mat-error>A new name is required.</mat-error>
+      }
+    </mat-form-field>
+
+    @if (error(); as message) {
+      <p class="api-error" role="alert">{{ message }}</p>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" mat-dialog-close [disabled]="saving()">Cancel</button>
+    <button mat-flat-button type="submit" [disabled]="saving()">Rename</button>
+  </mat-dialog-actions>
+
+  @if (saving()) {
+    <mat-progress-bar mode="indeterminate" aria-label="Saving" />
+  }
+</form>
