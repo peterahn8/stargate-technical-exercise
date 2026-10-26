@@ -20,6 +20,10 @@
     <div class="title-row">
       <h1>{{ result.person.name }}</h1>
       <span class="status" [class]="'status status-' + status()">{{ statusLabel() }}</span>
+      <button mat-flat-button type="button" class="add-duty" (click)="addDuty()">
+        <mat-icon>add</mat-icon>
+        Add duty
+      </button>
     </div>
 
     @if (result.person.currentDutyTitle) {

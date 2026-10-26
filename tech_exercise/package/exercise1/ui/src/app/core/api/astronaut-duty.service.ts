@@ -11,11 +11,15 @@ export class AstronautDutyService {
 
   /** A person's current details and all their duties, newest first. */
   getDuties(name: string): Observable<GetAstronautDutiesResult> {
-    return this.http.get<GetAstronautDutiesResult>(`${API_BASE}/AstronautDuty/${encodeURIComponent(name)}`);
+    return this.http.get<GetAstronautDutiesResult>(
+      `${API_BASE}/AstronautDuty/${encodeURIComponent(name)}`,
+    );
   }
 
   /** Adds a duty and returns its id. */
   addDuty(duty: NewDuty): Observable<number> {
-    return this.http.post<IdResult>(`${API_BASE}/AstronautDuty`, duty).pipe(map((result) => result.id));
+    return this.http
+      .post<IdResult>(`${API_BASE}/AstronautDuty`, duty)
+      .pipe(map((result) => result.id));
   }
 }

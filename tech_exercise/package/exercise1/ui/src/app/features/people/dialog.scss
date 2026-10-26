@@ -1,0 +1,24 @@
+// Shared by the add-person and add-duty dialogs.
+mat-form-field {
+  width: 100%;
+}
+
+mat-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: min(400px, 80vw);
+}
+
+.api-error {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}
+
+.context {
+  margin: 0 0 8px;
+  color: var(--mat-sys-on-surface-variant);
+}

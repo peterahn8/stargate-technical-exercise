@@ -12,7 +12,10 @@ describe('[UI-2] AstronautDutyService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(withInterceptors([apiErrorInterceptor])), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(withInterceptors([apiErrorInterceptor])),
+        provideHttpClientTesting(),
+      ],
     });
     service = TestBed.inject(AstronautDutyService);
     http = TestBed.inject(HttpTestingController);
@@ -34,7 +37,13 @@ describe('[UI-2] AstronautDutyService', () => {
         careerEndDate: null,
       },
       astronautDuties: [
-        { id: 3, rank: 'CPT', dutyTitle: 'Commander', dutyStartDate: '2023-01-01T00:00:00', dutyEndDate: null },
+        {
+          id: 3,
+          rank: 'CPT',
+          dutyTitle: 'Commander',
+          dutyStartDate: '2023-01-01T00:00:00',
+          dutyEndDate: null,
+        },
       ],
     };
     const result = firstValueFrom(service.getDuties('John Doe'));
@@ -45,7 +54,12 @@ describe('[UI-2] AstronautDutyService', () => {
   });
 
   it('adds a duty with POST /api/AstronautDuty and returns its id', async () => {
-    const duty = { name: 'John Doe', rank: 'MAJ', dutyTitle: 'Commander', dutyStartDate: '2025-01-01' };
+    const duty = {
+      name: 'John Doe',
+      rank: 'MAJ',
+      dutyTitle: 'Commander',
+      dutyStartDate: '2025-01-01',
+    };
     const id = firstValueFrom(service.addDuty(duty));
 
     const request = http.expectOne({ method: 'POST', url: '/api/AstronautDuty' });

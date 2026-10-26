@@ -1,0 +1,57 @@
+<h2 mat-dialog-title>Add a duty for {{ data.name }}</h2>
+
+<form [formGroup]="form" (ngSubmit)="save()">
+  <mat-dialog-content>
+    @if (data.currentDuty; as current) {
+      <p class="context">
+        Current duty: {{ current.dutyTitle }} ({{ current.rank }}), since
+        {{ current.dutyStartDate | date: 'mediumDate' }}. It will end the day before the new duty
+        starts.
+      </p>
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>Duty title</mat-label>
+      <input matInput cdkFocusInitial autocomplete="off" formControlName="dutyTitle" />
+      <mat-hint>Use RETIRED to retire this person.</mat-hint>
+      @if (form.controls.dutyTitle.hasError('required')) {
+        <mat-error>A duty title is required.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Rank</mat-label>
+      <input matInput autocomplete="off" formControlName="rank" />
+      @if (form.controls.rank.hasError('required')) {
+        <mat-error>A rank is required.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Start date</mat-label>
+      <input matInput formControlName="dutyStartDate" [matDatepicker]="picker" [min]="minDate" />
+      <mat-datepicker-toggle matIconSuffix [for]="picker" />
+      <mat-datepicker #picker />
+      @if (form.controls.dutyStartDate.hasError('required')) {
+        <mat-error>A start date is required.</mat-error>
+      } @else if (form.controls.dutyStartDate.hasError('matDatepickerMin')) {
+        <mat-error>It must start after the current duty's start date.</mat-error>
+      }
+    </mat-form-field>
+
+    @if (form.errors?.['dutyRule'] && form.touched) {
+      <p class="api-error" role="alert">{{ form.errors?.['dutyRule'] }}</p>
+    } @else if (error(); as message) {
+      <p class="api-error" role="alert">{{ message }}</p>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" mat-dialog-close [disabled]="saving()">Cancel</button>
+    <button mat-flat-button type="submit" [disabled]="saving()">Add duty</button>
+  </mat-dialog-actions>
+
+  @if (saving()) {
+    <mat-progress-bar mode="indeterminate" aria-label="Saving" />
+  }
+</form>

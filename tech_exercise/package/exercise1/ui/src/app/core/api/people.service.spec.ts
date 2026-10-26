@@ -21,7 +21,10 @@ describe('[UI-1] PeopleService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(withInterceptors([apiErrorInterceptor])), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(withInterceptors([apiErrorInterceptor])),
+        provideHttpClientTesting(),
+      ],
     });
     service = TestBed.inject(PeopleService);
     http = TestBed.inject(HttpTestingController);
@@ -40,7 +43,9 @@ describe('[UI-1] PeopleService', () => {
   it("gets one person by name, encoding names like O'Neill safely", async () => {
     const person = firstValueFrom(service.getPerson('Jack O Neill'));
 
-    http.expectOne({ method: 'GET', url: '/api/Person/Jack%20O%20Neill' }).flush({ person: john, success: true });
+    http
+      .expectOne({ method: 'GET', url: '/api/Person/Jack%20O%20Neill' })
+      .flush({ person: john, success: true });
 
     expect(await person).toEqual(john);
   });

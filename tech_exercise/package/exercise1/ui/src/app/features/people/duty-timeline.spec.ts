@@ -2,7 +2,13 @@ import { AstronautDuty } from '../../core/api/models';
 import { toTimeline } from './duty-timeline';
 
 function duty(id: number, title: string, start: string, end: string | null): AstronautDuty {
-  return { id, rank: 'COL', dutyTitle: title, dutyStartDate: `${start}T00:00:00`, dutyEndDate: end ? `${end}T00:00:00` : null };
+  return {
+    id,
+    rank: 'COL',
+    dutyTitle: title,
+    dutyStartDate: `${start}T00:00:00`,
+    dutyEndDate: end ? `${end}T00:00:00` : null,
+  };
 }
 
 // George Hammond's career from the seed data, newest first: retired, then returned to service.
@@ -28,7 +34,11 @@ describe('[UI-3] toTimeline', () => {
     expect(timeline.map((entry) => entry.returnedToService)).toEqual([true, false, false]);
   });
 
-  it("measures ended duties to their end date and the current one to today", () => {
-    expect(timeline.map((entry) => entry.duration)).toEqual(['10 years, 4 months', '3 years, 5 months', '8 years']);
+  it('measures ended duties to their end date and the current one to today', () => {
+    expect(timeline.map((entry) => entry.duration)).toEqual([
+      '10 years, 4 months',
+      '3 years, 5 months',
+      '8 years',
+    ]);
   });
 });

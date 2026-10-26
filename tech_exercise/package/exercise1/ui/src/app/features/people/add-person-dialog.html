@@ -1,0 +1,27 @@
+<h2 mat-dialog-title>Add a person</h2>
+
+<form [formGroup]="form" (ngSubmit)="save()">
+  <mat-dialog-content>
+    <mat-form-field appearance="outline">
+      <mat-label>Name</mat-label>
+      <input matInput cdkFocusInitial autocomplete="off" formControlName="name" />
+      <mat-hint>Names are unique, ignoring case.</mat-hint>
+      @if (form.controls.name.hasError('required')) {
+        <mat-error>A name is required.</mat-error>
+      }
+    </mat-form-field>
+
+    @if (error(); as message) {
+      <p class="api-error" role="alert">{{ message }}</p>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" mat-dialog-close [disabled]="saving()">Cancel</button>
+    <button mat-flat-button type="submit" [disabled]="saving()">Add person</button>
+  </mat-dialog-actions>
+
+  @if (saving()) {
+    <mat-progress-bar mode="indeterminate" aria-label="Saving" />
+  }
+</form>

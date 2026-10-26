@@ -3,6 +3,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -12,6 +13,7 @@ import { Router, RouterLink } from '@angular/router';
 import { PersonAstronaut } from '../../core/api/models';
 import { PeopleService } from '../../core/api/people.service';
 import { AstronautStatus, astronautStatus, statusLabels } from '../../core/astronaut-status';
+import { AddPersonDialog } from './add-person-dialog';
 
 type StatusFilter = AstronautStatus | 'all';
 
@@ -35,8 +37,12 @@ type StatusFilter = AstronautStatus | 'all';
 export class PeopleList {
   private readonly peopleService = inject(PeopleService);
   private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
 
-  protected readonly people = rxResource({ stream: () => this.peopleService.getPeople(), defaultValue: [] });
+  protected readonly people = rxResource({
+    stream: () => this.peopleService.getPeople(),
+    defaultValue: [],
+  });
   protected readonly search = signal('');
   protected readonly statusFilter = signal<StatusFilter>('all');
 
@@ -50,7 +56,9 @@ export class PeopleList {
 
   /** Everyone, sorted by name. Empty while loading or after an error. */
   private readonly everyone = computed(() =>
-    this.people.hasValue() ? [...this.people.value()].sort((a, b) => a.name.localeCompare(b.name)) : [],
+    this.people.hasValue()
+      ? [...this.people.value()].sort((a, b) => a.name.localeCompare(b.name))
+      : [],
   );
 
   protected readonly visible = computed(() => {
@@ -79,6 +87,17 @@ export class PeopleList {
 
   protected setSearch(event: Event): void {
     this.search.set((event.target as HTMLInputElement).value);
+  }
+
+  protected addPerson(): void {
+    this.dialog
+      .open<AddPersonDialog, void, string>(AddPersonDialog)
+      .afterClosed()
+      .subscribe((name) => {
+        if (name) {
+          this.people.reload();
+        }
+      });
   }
 
   protected open(person: PersonAstronaut): void {

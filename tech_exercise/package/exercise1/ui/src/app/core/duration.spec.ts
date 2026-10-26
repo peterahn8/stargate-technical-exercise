@@ -15,7 +15,9 @@ describe('[UI-3] describeDuration', () => {
   });
 
   it("doesn't count an incomplete month", () => {
-    expect(describeDuration(new Date(2020, 0, 15), new Date(2020, 1, 14))).toBe('less than a month');
+    expect(describeDuration(new Date(2020, 0, 15), new Date(2020, 1, 14))).toBe(
+      'less than a month',
+    );
   });
 });
 

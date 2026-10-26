@@ -2,7 +2,14 @@ import { PersonAstronaut } from './api/models';
 import { astronautStatus } from './astronaut-status';
 
 function withTitle(title: string | null): PersonAstronaut {
-  return { personId: 1, name: 'John Doe', currentRank: null, currentDutyTitle: title, careerStartDate: null, careerEndDate: null };
+  return {
+    personId: 1,
+    name: 'John Doe',
+    currentRank: null,
+    currentDutyTitle: title,
+    careerStartDate: null,
+    careerEndDate: null,
+  };
 }
 
 describe('[UI-1] astronautStatus', () => {
@@ -15,10 +22,8 @@ describe('[UI-1] astronautStatus', () => {
   });
 
   it('is "retired" for RETIRED, ignoring case like the API', () => {
-    expect(['RETIRED', 'Retired', 'retired'].map((title) => astronautStatus(withTitle(title)))).toEqual([
-      'retired',
-      'retired',
-      'retired',
-    ]);
+    expect(
+      ['RETIRED', 'Retired', 'retired'].map((title) => astronautStatus(withTitle(title))),
+    ).toEqual(['retired', 'retired', 'retired']);
   });
 });

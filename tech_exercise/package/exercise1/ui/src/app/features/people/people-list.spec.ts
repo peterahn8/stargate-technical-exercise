@@ -13,8 +13,21 @@ import { apiErrorInterceptor } from '../../core/api/api-error';
 import { PersonAstronaut } from '../../core/api/models';
 import { PeopleList } from './people-list';
 
-function person(name: string, rank: string | null, title: string | null, start: string | null, end: string | null = null): PersonAstronaut {
-  return { personId: 0, name, currentRank: rank, currentDutyTitle: title, careerStartDate: start, careerEndDate: end };
+function person(
+  name: string,
+  rank: string | null,
+  title: string | null,
+  start: string | null,
+  end: string | null = null,
+): PersonAstronaut {
+  return {
+    personId: 0,
+    name,
+    currentRank: rank,
+    currentDutyTitle: title,
+    careerStartDate: start,
+    careerEndDate: end,
+  };
 }
 
 const people: PersonAstronaut[] = [
@@ -49,7 +62,9 @@ describe('[UI-1] PeopleList', () => {
   afterEach(() => http.verify());
 
   async function respondWith(body: object, status = 200): Promise<void> {
-    http.expectOne('/api/Person').flush(body, { status, statusText: status === 200 ? 'OK' : 'Error' });
+    http
+      .expectOne('/api/Person')
+      .flush(body, { status, statusText: status === 200 ? 'OK' : 'Error' });
     await fixture.whenStable();
   }
 
@@ -69,7 +84,12 @@ describe('[UI-1] PeopleList', () => {
   it('lists everyone, sorted by name, with their astronaut status', async () => {
     await respondWith({ people, success: true });
 
-    expect(await column('name')).toEqual(['George Hammond', "Jack O'Neill", 'Jane Doe', 'John Doe']);
+    expect(await column('name')).toEqual([
+      'George Hammond',
+      "Jack O'Neill",
+      'Jane Doe',
+      'John Doe',
+    ]);
     expect(await column('status')).toEqual(['Active', 'Retired', 'Not an astronaut', 'Active']);
     expect(text()).toContain('Showing 4 of 4');
   });
@@ -77,7 +97,9 @@ describe('[UI-1] PeopleList', () => {
   it("shows '—' for a non-astronaut's rank, duty and career", async () => {
     await respondWith({ people: [people[1]], success: true });
 
-    const cells = (await (await (await loader.getHarness(MatTableHarness)).getRows())[0].getCellTextByColumnName());
+    const cells = await (
+      await (await loader.getHarness(MatTableHarness)).getRows()
+    )[0].getCellTextByColumnName();
     expect([cells['rank'], cells['title'], cells['career']]).toEqual(['—', '—', '—']);
   });
 
@@ -127,7 +149,10 @@ describe('[UI-1] PeopleList', () => {
   });
 
   it("shows the API's message and retries when asked", async () => {
-    await respondWith({ success: false, message: 'An unexpected error occurred.', responseCode: 500 }, 500);
+    await respondWith(
+      { success: false, message: 'An unexpected error occurred.', responseCode: 500 },
+      500,
+    );
     expect(text()).toContain('An unexpected error occurred.');
 
     expect(await loader.getAllHarnesses(MatButtonHarness.with({ text: 'Retry' }))).toHaveLength(1);

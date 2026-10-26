@@ -10,7 +10,10 @@ describe('[UI-3] apiErrorInterceptor', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(withInterceptors([apiErrorInterceptor])), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(withInterceptors([apiErrorInterceptor])),
+        provideHttpClientTesting(),
+      ],
     });
     client = TestBed.inject(HttpClient);
     http = TestBed.inject(HttpTestingController);

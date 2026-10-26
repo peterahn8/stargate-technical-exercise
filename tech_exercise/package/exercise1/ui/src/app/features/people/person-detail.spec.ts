@@ -21,9 +21,27 @@ const george: GetAstronautDutiesResult = {
     careerEndDate: null,
   },
   astronautDuties: [
-    { id: 9, rank: 'MG', dutyTitle: 'Commander', dutyStartDate: '2016-06-01T00:00:00', dutyEndDate: null },
-    { id: 8, rank: 'COL', dutyTitle: 'RETIRED', dutyStartDate: '2013-01-01T00:00:00', dutyEndDate: '2016-05-31T00:00:00' },
-    { id: 7, rank: 'COL', dutyTitle: 'Commander', dutyStartDate: '2005-01-01T00:00:00', dutyEndDate: '2012-12-31T00:00:00' },
+    {
+      id: 9,
+      rank: 'MG',
+      dutyTitle: 'Commander',
+      dutyStartDate: '2016-06-01T00:00:00',
+      dutyEndDate: null,
+    },
+    {
+      id: 8,
+      rank: 'COL',
+      dutyTitle: 'RETIRED',
+      dutyStartDate: '2013-01-01T00:00:00',
+      dutyEndDate: '2016-05-31T00:00:00',
+    },
+    {
+      id: 7,
+      rank: 'COL',
+      dutyTitle: 'Commander',
+      dutyStartDate: '2005-01-01T00:00:00',
+      dutyEndDate: '2012-12-31T00:00:00',
+    },
   ],
 };
 
@@ -58,7 +76,10 @@ describe('[UI-2] PersonDetail', () => {
   }
 
   function texts(selector: string): string[] {
-    return Array.from(element().querySelectorAll(selector), (node) => node.textContent?.trim() ?? '');
+    return Array.from(
+      element().querySelectorAll(selector),
+      (node) => node.textContent?.trim() ?? '',
+    );
   }
 
   it("retrieves the person's duties from the API by name", async () => {
@@ -88,7 +109,13 @@ describe('[UI-2] PersonDetail', () => {
   it('says when a person has never been an astronaut', async () => {
     const jane = {
       ...george,
-      person: { ...george.person, name: 'Jane Doe', currentRank: null, currentDutyTitle: null, careerStartDate: null },
+      person: {
+        ...george.person,
+        name: 'Jane Doe',
+        currentRank: null,
+        currentDutyTitle: null,
+        careerStartDate: null,
+      },
       astronautDuties: [],
     };
 
@@ -104,7 +131,12 @@ describe('[UI-2] PersonDetail', () => {
       http
         .expectOne(url)
         .flush(
-          { person: null, success: false, message: "Person 'Nobody' not found.", responseCode: 404 },
+          {
+            person: null,
+            success: false,
+            message: "Person 'Nobody' not found.",
+            responseCode: 404,
+          },
           { status: 404, statusText: 'Not Found' },
         ),
     );
@@ -113,7 +145,7 @@ describe('[UI-2] PersonDetail', () => {
     expect(element().querySelector('.error a')?.getAttribute('href')).toBe('/people');
   });
 
-  it("names the browser tab after the person", async () => {
+  it('names the browser tab after the person', async () => {
     await open('George Hammond', (url) => http.expectOne(url).flush(george));
 
     expect(TestBed.inject(Title).getTitle()).toBe('George Hammond · Stargate');

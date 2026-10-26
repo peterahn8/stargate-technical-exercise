@@ -10,7 +10,9 @@ export class PeopleService {
   private readonly http = inject(HttpClient);
 
   getPeople(): Observable<PersonAstronaut[]> {
-    return this.http.get<GetPeopleResult>(`${API_BASE}/Person`).pipe(map((result) => result.people));
+    return this.http
+      .get<GetPeopleResult>(`${API_BASE}/Person`)
+      .pipe(map((result) => result.people));
   }
 
   getPerson(name: string): Observable<PersonAstronaut> {
@@ -29,7 +31,11 @@ export class PeopleService {
   /** Renames a person (D16) and returns their id. */
   renamePerson(name: string, newName: string): Observable<number> {
     return this.http
-      .put<IdResult>(`${API_BASE}/Person/${encodeURIComponent(name)}`, jsonString(newName), jsonOptions)
+      .put<IdResult>(
+        `${API_BASE}/Person/${encodeURIComponent(name)}`,
+        jsonString(newName),
+        jsonOptions,
+      )
       .pipe(map((result) => result.id));
   }
 }
