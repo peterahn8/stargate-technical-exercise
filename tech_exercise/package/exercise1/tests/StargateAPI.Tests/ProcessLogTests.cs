@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Http;
 using StargateAPI.Business.Data;
+using StargateAPI.Business.Queries;
 
 namespace StargateAPI.Tests
 {
@@ -32,5 +34,63 @@ namespace StargateAPI.Tests
             Assert.Equal(12, log.DurationMs);
             Assert.Equal("{\"name\":\"John Doe\"}", log.Payload);
         }
+
+        [Fact]
+        [Trait("AC", "SPEC-5")]
+        public async Task Pipeline_SuccessfulCommand_IsLoggedWithPayload()
+        {
+            await _host.CreatePerson("John Doe");
+
+            var log = Assert.Single(Logs());
+            Assert.Equal(("CreatePerson", "Success", "Information"), (log.RequestType, log.Outcome, log.Level));
+            Assert.Contains("John Doe", log.Payload);
+            Assert.Null(log.Exception);
+            Assert.True(log.DurationMs >= 0);
+            Assert.True(DateTime.UtcNow - log.Timestamp < TimeSpan.FromMinutes(1));
+        }
+
+        [Fact]
+        [Trait("AC", "SPEC-5")]
+        public async Task Pipeline_SuccessfulQuery_IsLogged()
+        {
+            await _host.Send(new GetPeople());
+
+            var log = Assert.Single(Logs());
+            Assert.Equal(("GetPeople", "Success"), (log.RequestType, log.Outcome));
+        }
+
+        [Fact]
+        [Trait("AC", "SPEC-5")]
+        public async Task Pipeline_ValidationFailure_IsLoggedAsWarningAndStillThrown()
+        {
+            await Assert.ThrowsAsync<BadHttpRequestException>(() => _host.CreatePerson("   "));
+
+            var log = Assert.Single(Logs());
+            Assert.Equal(("CreatePerson", "Failure", "Warning", "A name is required."), (log.RequestType, log.Outcome, log.Level, log.Message));
+            Assert.Null(log.Exception);
+        }
+
+        [Fact]
+        [Trait("AC", "SPEC-5")]
+        public async Task Pipeline_ReturnedNotFound_IsLoggedAsWarning()
+        {
+            await _host.Send(new GetPersonByName { Name = "Nobody" });
+
+            var log = Assert.Single(Logs());
+            Assert.Equal(("GetPersonByName", "Failure", "Warning", "Person 'Nobody' not found."), (log.RequestType, log.Outcome, log.Level, log.Message));
+        }
+
+        [Fact]
+        [Trait("AC", "SPEC-5")]
+        public async Task Pipeline_EachRequest_IsLoggedInOrder()
+        {
+            await _host.CreatePerson("John Doe");
+            await _host.AddDuty("John Doe", "CPT", "Commander", new DateTime(2024, 1, 1));
+            await _host.Send(new GetAstronautDutiesByName { Name = "John Doe" });
+
+            Assert.Equal(new[] { "CreatePerson", "CreateAstronautDuty", "GetAstronautDutiesByName" }, Logs().Select(l => l.RequestType));
+        }
+
+        private List<ProcessLog> Logs() => _host.Db(db => db.ProcessLogs.OrderBy(l => l.Id).ToList());
     }
 }

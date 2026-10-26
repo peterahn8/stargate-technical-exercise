@@ -1,4 +1,6 @@
+using MediatR;
 using StargateAPI.Business.Commands;
+using StargateAPI.Business.Logging;
 
 namespace StargateAPI.Business
 {
@@ -10,6 +12,12 @@ namespace StargateAPI.Business
         /// </summary>
         public static IServiceCollection AddStargateMediatR(this IServiceCollection services)
         {
+            services.AddLogging();
+            services.AddScoped<IProcessLogWriter, ProcessLogWriter>();
+            // Registered before AddMediatR, which adds its own pre-processor step: pipeline steps run in
+            // registration order, so logging wraps everything, including validation (D17).
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ProcessLoggingBehavior<,>));
+
             return services.AddMediatR(cfg =>
             {
                 cfg.AddRequestPreProcessor<CreatePersonPreProcessor>();

@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
+using StargateAPI.Business.Data;
 using System.Net;
 
 namespace StargateAPI.Controllers
@@ -13,8 +12,6 @@ namespace StargateAPI.Controllers
     /// </summary>
     public sealed class ApiExceptionHandler : IExceptionHandler
     {
-        private const int SqliteConstraintUnique = 2067;
-
         private readonly ILogger<ApiExceptionHandler> _logger;
 
         public ApiExceptionHandler(ILogger<ApiExceptionHandler> logger)
@@ -27,7 +24,7 @@ namespace StargateAPI.Controllers
             var response = exception switch
             {
                 BadHttpRequestException badRequest => Error(badRequest.StatusCode, badRequest.Message),
-                DbUpdateException { InnerException: SqliteException { SqliteExtendedErrorCode: SqliteConstraintUnique } } =>
+                _ when DatabaseErrors.IsUniqueConflict(exception) =>
                     Error((int)HttpStatusCode.Conflict, "The request conflicts with existing data. Please retry."),
                 _ => Error((int)HttpStatusCode.InternalServerError, "An unexpected error occurred.")
             };
