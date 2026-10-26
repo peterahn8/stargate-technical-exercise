@@ -135,7 +135,7 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 | ID | Task | Status |
 |----|------|--------|
 | T25 | Add/**update** a person by name: `PUT /Person/{name}` renames them, with the new name as a JSON string body. Unknown person → 404, blank new name → 400, name taken by someone else → 409; a case-only change is allowed. → D16 | ✅ `1cf0853` |
-| T26 | Let the Angular app reach the API: `ng serve`'s proxy forwards `/api/*` to the API and strips the prefix, so the browser sees one origin and the API needs no CORS policy. A separately hosted UI would need one. → D18 | ⬜ |
+| T26 | Let the Angular app reach the API: `ng serve`'s proxy forwards `/api/*` to the API and strips the prefix, so the browser sees one origin and the API needs no CORS policy. A separately hosted UI would need one. To run both: `dotnet run --launch-profile http` in `api/` (port 5204), then `npm start` in `ui/` (port 4200). → D18 | ✅ |
 
 ### Phase 6 — Process logging (stored in the database)
 
@@ -149,7 +149,7 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 
 | ID | Task | Status |
 |----|------|--------|
-| T30 | Scaffold the Angular 22 app in `exercise1/ui` (standalone components, signals, no zone.js, strict mode, SCSS, Vitest) with Angular Material 22; add the app shell, typed API services (`PeopleService`, `AstronautDutyService`, all calls under `/api`) and an interceptor that turns every failure into an `ApiError` carrying the API's own message. → D18 | ✅ |
+| T30 | Scaffold the Angular 22 app in `exercise1/ui` (standalone components, signals, no zone.js, strict mode, SCSS, Vitest) with Angular Material 22; add the app shell, typed API services (`PeopleService`, `AstronautDutyService`, all calls under `/api`) and an interceptor that turns every failure into an `ApiError` carrying the API's own message. → D18 | ✅ `665cf95` |
 | T31 | People list: search, astronaut vs. non-astronaut, retired badge. | ⬜ |
 | T32 | Person detail: current rank and title, career dates, and the duty history as a timeline (current duty highlighted; RETIRED and return to service visible). | ⬜ |
 | T33 | Forms: add a person, add a duty. Validation mirrors the API rules; rejections show the API's message. | ⬜ |
