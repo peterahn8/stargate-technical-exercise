@@ -26,3 +26,6 @@ dist/
 
 # Archives (exercise source tarball; contents live in tech_exercise/)
 *.tgz
+
+# Rider solution settings (generated when Stargate.sln is opened)
+tech_exercise/package/exercise1/.idea/
