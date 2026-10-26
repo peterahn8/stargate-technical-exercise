@@ -3,6 +3,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using StargateAPI.Business;
+using StargateAPI.Business.Commands;
 using StargateAPI.Business.Data;
 
 namespace StargateAPI.Tests
@@ -37,6 +38,14 @@ namespace StargateAPI.Tests
             using var scope = _services.CreateScope();
             return await scope.ServiceProvider.GetRequiredService<IMediator>().Send(request);
         }
+
+        /// <summary>Creates a person through the pipeline.</summary>
+        public Task<CreatePersonResult> CreatePerson(string name) =>
+            Send(new CreatePerson { Name = name });
+
+        /// <summary>Adds a duty through the pipeline.</summary>
+        public Task<CreateAstronautDutyResult> AddDuty(string name, string rank, string title, DateTime start) =>
+            Send(new CreateAstronautDuty { Name = name, Rank = rank, DutyTitle = title, DutyStartDate = start });
 
         /// <summary>Reads or arranges data directly, in its own scope.</summary>
         public T Db<T>(Func<StargateContext, T> action)

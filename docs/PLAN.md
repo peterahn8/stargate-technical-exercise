@@ -38,8 +38,8 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 
 | ID | Spec (verbatim) | Acceptance criterion (our interpretation) | Tasks / decisions | Tests | Status |
 |----|-----------------|-------------------------------------------|-------------------|-------|--------|
-| RULE-1 | A Person is uniquely identified by their Name. | A person is uniquely identified by name: *creating a person whose name already exists is rejected, and the database enforces uniqueness.* | T08, T11, T18, D4 | `AC=RULE-1` · 1 | 🟡 duplicates rejected, but as 500 rather than 400 (T21); names not yet trimmed (T18) |
-| RULE-2 | A Person who has not had an astronaut assignment will not have Astronaut records. | A person with no astronaut assignment has no `AstronautDetail` and no `AstronautDuty` rows; *the API returns null astronaut fields for them.* | T10, T23 | `AC=RULE-2` · 1 | 🟡 rank and title come back as `""`, not null (T23) |
+| RULE-1 | A Person is uniquely identified by their Name. | A person is uniquely identified by name: *creating a person whose name already exists is rejected, and the database enforces uniqueness.* | T08, T11, T18, D4 | `AC=RULE-1` · 5 | 🟡 duplicates rejected, but as 500 rather than 400 (T21); names not yet trimmed (T18) |
+| RULE-2 | A Person who has not had an astronaut assignment will not have Astronaut records. | A person with no astronaut assignment has no `AstronautDetail` and no `AstronautDuty` rows; *the API returns null astronaut fields for them.* | T10, T23 | `AC=RULE-2` · 2 (+1 skipped) | 🟡 rank and title come back as `""`, not null (T23) |
 | RULE-3 | A Person will only ever hold one current Astronaut Duty Title, Start Date, and Rank at a time. | A person has at most one current duty (title, start date, rank), *and `AstronautDetail` always reflects it (spec Definitions #2).* | T10, T14, T20 | `AC=RULE-3` · 3 | 🟡 a backdated duty becomes "current" |
 | RULE-4 | A Person's Current Duty will not have a Duty End Date. | The current duty has no `DutyEndDate`; *every other duty has one (inferred from RULE-5).* | T10, T14 | `AC=RULE-4` · 3 | 🟡 breaks with backdating |
 | RULE-5 | A Person's Previous Duty End Date is set to the day before the New Astronaut Duty Start Date when a new Astronaut Duty is received for a Person. | When a new duty is received, the previous duty's `DutyEndDate` = new `DutyStartDate` − 1 day. *"Previous" means the current duty; a new duty must start strictly after it, otherwise it's rejected with 400 (D1).* | T10, T14, D1 | `AC=RULE-5` · 1 (+2 skipped) | ❌ backdating yields end < start |
@@ -50,11 +50,11 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 
 | ID | Spec (verbatim) | Acceptance criterion (our interpretation) | Tasks / decisions | Tests | Status |
 |----|-----------------|-------------------------------------------|-------------------|-------|--------|
-| API-1 | Retrieve a person by name. | Retrieve a person by name, *safe for any name; an unknown name returns 404 (D3).* | T07, T11, T16, T21, D3 | `AC=API-1` · 1 | 🟡 unknown name → 200 with null (T16) |
-| API-2 | Retrieve all people. | Retrieve all people. | T11 | — | 🟡 works, untested |
-| API-3 | Add/update a person by name. | Add or update a person by name. | T08, T11, T25 | `AC=API-3` · 1 | ❌ no update (T25); duplicates rejected as 500 (T21) |
-| API-4 | Retrieve Astronaut Duty by name. | Retrieve *all of* a person's astronaut duties by name. *An unknown name returns 404; a known person with no astronaut records returns 200 with null astronaut fields and an empty duties list (D3).* | T06, T07, T11, T16, T21, T38 | — | 🟡 returns duties; unknown name → 500 (T16) |
-| API-5 | Add an Astronaut Duty. | Add an astronaut duty, *applying RULE-3 to RULE-7.* | T07, T10, T13–T15, T19–T21 | `AC=API-5` · 3 | 🟡 rule violations above |
+| API-1 | Retrieve a person by name. | Retrieve a person by name, *safe for any name; an unknown name returns 404 (D3).* | T07, T11, T16, T21, D3 | `AC=API-1` · 5 (+2 skipped) | 🟡 unknown name → 200 with null (T16) |
+| API-2 | Retrieve all people. | Retrieve all people. | T11 | `AC=API-2` · 2 | ✅ |
+| API-3 | Add/update a person by name. | Add or update a person by name. | T08, T11, T25 | `AC=API-3` · 4 | ❌ no update (T25); duplicates rejected as 500 (T21) |
+| API-4 | Retrieve Astronaut Duty by name. | Retrieve *all of* a person's astronaut duties by name. *An unknown name returns 404; a known person with no astronaut records returns 200 with null astronaut fields and an empty duties list (D3).* | T06, T07, T11, T16, T21, T38 | `AC=API-4` · 4 (+2 skipped) | 🟡 returns duties; unknown name → 500 (T16) |
+| API-5 | Add an Astronaut Duty. | Add an astronaut duty, *applying RULE-3 to RULE-7.* | T07, T10, T13–T15, T19–T21 | `AC=API-5` · 6 (+1 skipped) | 🟡 rule violations above |
 
 ### UI requirements
 
@@ -101,8 +101,8 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 | ID | Task | Status |
 |----|------|--------|
 | T09 | Create an xUnit test project with in-memory SQLite (a real provider, so the Dapper SQL runs) and coverlet for coverage. Run from `tech_exercise/package/exercise1/`: `dotnet test Stargate.sln`; one criterion: `--filter "AC=RULE-1"`; coverage: `--collect:"XPlat Code Coverage"`, then `dotnet reportgenerator -reports:"tests/StargateAPI.Tests/TestResults/*/coverage.cobertura.xml" -targetdir:coverage -reporttypes:Html`. → D8, D11 | ✅ `19aac51` |
-| T10 | Tests for `CreateAstronautDutyHandler`: first duty, a subsequent duty, RETIRED as the first duty, RETIRED after other duties, backdated duty, unknown person. Tests for behaviour not built yet are skipped with `Skip = "Pending Tnn …"`; the fixing task removes the skip first. → D12 | ✅ |
-| T11 | Tests for the pre-processors (person and duty) and for the queries (found and not found). | ⬜ |
+| T10 | Tests for `CreateAstronautDutyHandler`: first duty, a subsequent duty, RETIRED as the first duty, RETIRED after other duties, backdated duty, unknown person. Tests for behaviour not built yet are skipped with `Skip = "Pending Tnn …"`; the fixing task removes the skip first. → D12 | ✅ `868d15c` |
+| T11 | Tests for the pre-processors (person and duty) and for the queries (found and not found). | ✅ |
 | T12 | Reach >50% coverage. Record the number here: `__%`. | ⬜ |
 
 ### Phase 3 — Enforce the rules
