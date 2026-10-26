@@ -1,0 +1,101 @@
+<header class="page-header">
+  <h1>People</h1>
+  <p class="lead">Everyone tracked by ACTS, and their current astronaut assignment.</p>
+</header>
+
+<div class="filters">
+  <mat-form-field appearance="outline" class="search" subscriptSizing="dynamic">
+    <mat-label>Search</mat-label>
+    <mat-icon matPrefix>search</mat-icon>
+    <input
+      matInput
+      placeholder="Name, rank or title"
+      [value]="search()"
+      (input)="setSearch($event)"
+    />
+  </mat-form-field>
+
+  <mat-chip-listbox
+    aria-label="Filter by status"
+    hideSingleSelectionIndicator
+    [value]="statusFilter()"
+    (change)="statusFilter.set($event.value ?? 'all')"
+  >
+    @for (option of filterOptions; track option.value) {
+      <mat-chip-option [value]="option.value">{{ option.label }}</mat-chip-option>
+    }
+  </mat-chip-listbox>
+</div>
+
+<div class="progress">
+  @if (people.isLoading()) {
+    <mat-progress-bar mode="indeterminate" aria-label="Loading people" />
+  }
+</div>
+
+@if (errorMessage(); as message) {
+  <div class="error" role="alert">
+    <mat-icon aria-hidden="true">error</mat-icon>
+    <span>{{ message }}</span>
+    <button mat-button type="button" (click)="people.reload()">Retry</button>
+  </div>
+} @else if (!people.isLoading() && total() === 0) {
+  <p class="empty">No one has been added yet.</p>
+} @else if (!people.isLoading()) {
+  <p class="count">Showing {{ visible().length }} of {{ total() }}</p>
+
+  <div class="table-scroll">
+    <table mat-table class="people" [dataSource]="visible()">
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Name</th>
+        <td mat-cell *matCellDef="let person">
+          <a
+            class="name"
+            [routerLink]="['/people', person.name]"
+            (click)="$event.stopPropagation()"
+          >
+            {{ person.name }}
+          </a>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="rank">
+        <th mat-header-cell *matHeaderCellDef>Rank</th>
+        <td mat-cell *matCellDef="let person">{{ person.currentRank ?? '—' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="title">
+        <th mat-header-cell *matHeaderCellDef>Current duty</th>
+        <td mat-cell *matCellDef="let person">{{ person.currentDutyTitle ?? '—' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="career">
+        <th mat-header-cell *matHeaderCellDef>Career</th>
+        <td mat-cell *matCellDef="let person">
+          @if (person.careerStartDate) {
+            {{ person.careerStartDate | date: 'mediumDate' }} –
+            {{ person.careerEndDate ? (person.careerEndDate | date: 'mediumDate') : 'present' }}
+          } @else {
+            —
+          }
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let person">
+          <span class="status" [class]="'status status-' + status(person)">{{
+            statusLabel(person)
+          }}</span>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row class="row" *matRowDef="let person; columns: columns" (click)="open(person)"></tr>
+    </table>
+  </div>
+
+  @if (visible().length === 0) {
+    <p class="empty">No people match your search.</p>
+  }
+}

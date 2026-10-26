@@ -62,7 +62,7 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 
 | ID | Spec (verbatim) | Acceptance criterion (our interpretation) | Tasks / decisions | Tests | Status |
 |----|-----------------|-------------------------------------------|-------------------|-------|--------|
-| UI-1 | Successfully implement a web application that demonstrates production level quality. Angular is preferred. | A production-quality web application, built in Angular (the preferred option). | T30–T35, T40, T41 | `[UI-1]` · 6 | 🟡 scaffold, app shell and API layer done; the screens are still to come (T31–T35, T40, T41) |
+| UI-1 | Successfully implement a web application that demonstrates production level quality. Angular is preferred. | A production-quality web application, built in Angular (the preferred option). | T30–T35, T40, T41 | `[UI-1]` · 17 | 🟡 people list done; the remaining screens are still to come (T32–T35, T40, T41) |
 | UI-2 | Implement call(s) to retrieve an individual's astronaut duties. | The UI calls the API to retrieve an individual's astronaut duties. | T26, T30, T32 | `[UI-2]` · 2 | 🟡 the API call is in place; the person detail screen is still to come (T32) |
 | UI-3 | Display the progress of the process and the results in a visually sophisticated and appealing manner. | The UI shows the progress of each request *(loading, empty and error states)* and its results in a visually sophisticated and appealing way. | T30, T32, T34, T41 | `[UI-3]` · 3 | 🟡 API error messages are surfaced; progress states and the activity feed are still to come (T34, T41) |
 
@@ -135,7 +135,7 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 | ID | Task | Status |
 |----|------|--------|
 | T25 | Add/**update** a person by name: `PUT /Person/{name}` renames them, with the new name as a JSON string body. Unknown person → 404, blank new name → 400, name taken by someone else → 409; a case-only change is allowed. → D16 | ✅ `1cf0853` |
-| T26 | Let the Angular app reach the API: `ng serve`'s proxy forwards `/api/*` to the API and strips the prefix, so the browser sees one origin and the API needs no CORS policy. A separately hosted UI would need one. To run both: `dotnet run --launch-profile http` in `api/` (port 5204), then `npm start` in `ui/` (port 4200). → D18 | ✅ |
+| T26 | Let the Angular app reach the API: `ng serve`'s proxy forwards `/api/*` to the API and strips the prefix, so the browser sees one origin and the API needs no CORS policy. A separately hosted UI would need one. To run both: `dotnet run --launch-profile http` in `api/` (port 5204), then `npm start` in `ui/` (port 4200). → D18 | ✅ `5f56640` |
 
 ### Phase 6 — Process logging (stored in the database)
 
@@ -150,7 +150,7 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 | ID | Task | Status |
 |----|------|--------|
 | T30 | Scaffold the Angular 22 app in `exercise1/ui` (standalone components, signals, no zone.js, strict mode, SCSS, Vitest) with Angular Material 22; add the app shell, typed API services (`PeopleService`, `AstronautDutyService`, all calls under `/api`) and an interceptor that turns every failure into an `ApiError` carrying the API's own message. → D18 | ✅ `665cf95` |
-| T31 | People list: search, astronaut vs. non-astronaut, retired badge. | ⬜ |
+| T31 | People list: a Material table (name, rank, current duty, career dates, status chip) sorted by name; search as you type on name, rank or title; status filter chips; loading bar, error with Retry, and empty states. Rows link to `/people/:name`. Lazy-loaded, to keep the initial bundle within budget; rank and career are hidden on phones. | ✅ |
 | T32 | Person detail: current rank and title, career dates, and the duty history as a timeline (current duty highlighted; RETIRED and return to service visible). | ⬜ |
 | T33 | Forms: add a person, add a duty. Validation mirrors the API rules; rejections show the API's message. | ⬜ |
 | T34 | Progress and result states: progress bar and loading skeletons, buttons disabled while saving, empty and error states, and snackbars with the API's messages. *(Spec: "display the progress of the process")* → D18 | ⬜ |

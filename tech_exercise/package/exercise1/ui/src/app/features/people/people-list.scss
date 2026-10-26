@@ -1,0 +1,114 @@
+.page-header {
+  margin-bottom: 16px;
+
+  h1 {
+    font: var(--mat-sys-headline-medium);
+    margin: 0;
+  }
+
+  .lead {
+    color: var(--mat-sys-on-surface-variant);
+    margin: 4px 0 0;
+  }
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+
+  .search {
+    flex: 1 1 280px;
+  }
+}
+
+// Reserves the progress bar's height, so the page doesn't jump when loading starts and stops.
+.progress {
+  height: 4px;
+}
+
+.count {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+  margin: 12px 0 4px;
+}
+
+// If the table is ever wider than the screen, it scrolls on its own rather than widening the page.
+.table-scroll {
+  overflow-x: auto;
+  border-radius: 12px;
+}
+
+.people {
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--mat-sys-surface-container-lowest);
+
+  .row {
+    cursor: pointer;
+
+    &:hover {
+      background: var(--mat-sys-surface-container-high);
+    }
+  }
+
+  .name {
+    color: var(--mat-sys-primary);
+    font-weight: 500;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.status {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font: var(--mat-sys-label-medium);
+  white-space: nowrap;
+}
+
+.status-active {
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
+.status-retired {
+  background: var(--mat-sys-tertiary-container);
+  color: var(--mat-sys-on-tertiary-container);
+}
+
+.status-none {
+  background: var(--mat-sys-surface-container-highest);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}
+
+.empty {
+  margin-top: 24px;
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+// On phones, keep name, current duty and status; rank and career dates are on the person's page.
+@media (max-width: 600px) {
+  .people .mat-column-rank,
+  .people .mat-column-career {
+    display: none;
+  }
+}
