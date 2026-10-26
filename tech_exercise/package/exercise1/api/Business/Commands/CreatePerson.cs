@@ -21,17 +21,15 @@ namespace StargateAPI.Business.Commands
         {
             _context = context;
         }
-        public Task Process(CreatePerson request, CancellationToken cancellationToken)
+        public async Task Process(CreatePerson request, CancellationToken cancellationToken)
         {
             // Input is already trimmed (D4), so blank names arrive here as empty.
             if (string.IsNullOrEmpty(request.Name)) throw new BadHttpRequestException("A name is required.");
 
-            var person = _context.People.AsNoTracking().FirstOrDefault(z => z.Name == request.Name);
+            var person = await _context.People.AsNoTracking().FirstOrDefaultAsync(z => z.Name == request.Name, cancellationToken);
 
             if (person is not null)
                 throw new BadHttpRequestException($"A person named '{request.Name}' already exists.", StatusCodes.Status409Conflict);
-
-            return Task.CompletedTask;
         }
     }
 

@@ -32,7 +32,7 @@ namespace StargateAPI.Business.Commands
             _context = context;
         }
 
-        public Task Process(CreateAstronautDuty request, CancellationToken cancellationToken)
+        public async Task Process(CreateAstronautDuty request, CancellationToken cancellationToken)
         {
             // Input is already trimmed (D4), so blank text arrives here as empty.
             if (string.IsNullOrEmpty(request.Name)) throw new BadHttpRequestException("A name is required.");
@@ -40,17 +40,17 @@ namespace StargateAPI.Business.Commands
             if (string.IsNullOrEmpty(request.DutyTitle)) throw new BadHttpRequestException("A duty title is required.");
             if (request.DutyStartDate == default) throw new BadHttpRequestException("A duty start date is required.");
 
-            var person = _context.People.AsNoTracking().FirstOrDefault(z => z.Name == request.Name);
+            var person = await _context.People.AsNoTracking().FirstOrDefaultAsync(z => z.Name == request.Name, cancellationToken);
 
             if (person is null)
                 throw new BadHttpRequestException($"Person '{request.Name}' not found.", StatusCodes.Status404NotFound);
 
             // Duties only append to the timeline: a new duty must start after the current one (D1).
             // This also rejects duplicates, which share a start date with an existing duty.
-            var currentDuty = _context.AstronautDuties.AsNoTracking()
+            var currentDuty = await _context.AstronautDuties.AsNoTracking()
                 .Where(z => z.PersonId == person.Id)
                 .OrderByDescending(z => z.DutyStartDate)
-                .FirstOrDefault();
+                .FirstOrDefaultAsync(cancellationToken);
 
             if (currentDuty is not null && request.DutyStartDate.Date <= currentDuty.DutyStartDate)
                 throw new BadHttpRequestException($"A new duty must start after the current duty's start date ({currentDuty.DutyStartDate:yyyy-MM-dd}).");
@@ -64,8 +64,6 @@ namespace StargateAPI.Business.Commands
                 if (DutyTitles.IsRetired(currentDuty.DutyTitle))
                     throw new BadHttpRequestException("The person is already retired.");
             }
-
-            return Task.CompletedTask;
         }
     }
 
