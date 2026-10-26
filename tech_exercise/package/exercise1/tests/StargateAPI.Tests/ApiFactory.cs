@@ -16,11 +16,20 @@ namespace StargateAPI.Tests
     public sealed class ApiFactory : WebApplicationFactory<Program>
     {
         private readonly SqliteConnection _connection = new("DataSource=:memory:");
+        private readonly string _environment;
+
+        /// <param name="environment">
+        /// "Testing" by default, so Program skips its Development-only migrate-and-seed step. Either
+        /// way the database is this factory's in-memory one, never starbase.db.
+        /// </param>
+        public ApiFactory(string environment = "Testing")
+        {
+            _environment = environment;
+        }
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
-            // Not Development, so Program skips migrating and seeding starbase.db.
-            builder.UseEnvironment("Testing");
+            builder.UseEnvironment(_environment);
 
             builder.ConfigureServices(services =>
             {
