@@ -54,7 +54,7 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 | API-1 | Retrieve a person by name. | Retrieve a person by name, *safe for any name; an unknown name returns 404 (D3).* | T07, T11, T16, T21, D3 | `AC=API-1` · 9 | ✅ |
 | API-2 | Retrieve all people. | Retrieve all people. | T11 | `AC=API-2` · 2 | ✅ |
 | API-3 | Add/update a person by name. | Add or update a person by name. | T08, T11, T25 | `AC=API-3` · 9 | ❌ no update or rename (T25) |
-| API-4 | Retrieve Astronaut Duty by name. | Retrieve *all of* a person's astronaut duties by name. *An unknown name returns 404; a known person with no astronaut records returns 200 with null astronaut fields and an empty duties list (D3).* | T06, T07, T11, T16, T21, T38 | `AC=API-4` · 9 | 🟡 duties returned as EF entities (T38) |
+| API-4 | Retrieve Astronaut Duty by name. | Retrieve *all of* a person's astronaut duties by name. *An unknown name returns 404; a known person with no astronaut records returns 200 with null astronaut fields and an empty duties list (D3).* | T06, T07, T11, T16, T21, T38 | `AC=API-4` · 10 | ✅ |
 | API-5 | Add an Astronaut Duty. | Add an astronaut duty, *applying RULE-3 to RULE-7.* | T07, T10, T13–T15, T19–T21 | `AC=API-5` · 16 | ✅ |
 
 ### UI requirements
@@ -125,9 +125,9 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 |----|------|--------|
 | T21 | Consistent error handling. `CreateAstronautDuty` has no try/catch and leaks stack traces; the other actions catch everything, return 500 and leak `ex.Message`. Replace with a global exception handler: validation → 400, a database unique-constraint conflict (such as T20's race, or two simultaneous identical person creations) → 409 Conflict, anything unexpected → 500 with a generic message. (Not found is a result, not an exception; see D3.) Done with an `IExceptionHandler` that writes the `BaseResponse` shape for every error, including ASP.NET's automatic 400s; the controllers' catch-all blocks are gone. A duplicate person is a 409 and a duty for an unknown person a 404. → D15 | ✅ `fa0ce37` |
 | T22 | Make the pre-processors async (they currently call EF synchronously). | ✅ `2f72d52` |
-| T23 | Resolve the nullable warnings: 6 distinct at the start, 2 left after T16 (the `Person` navigation properties on `AstronautDetail` and `AstronautDuty`). Make `PersonAstronaut.CurrentRank` and `CurrentDutyTitle` `string?`, so a non-astronaut gets `null` rather than `""` (RULE-2). The navigation properties use `= null!`, as EF Core's documentation recommends; the build now has no warnings. | ✅ |
+| T23 | Resolve the nullable warnings: 6 distinct at the start, 2 left after T16 (the `Person` navigation properties on `AstronautDetail` and `AstronautDuty`). Make `PersonAstronaut.CurrentRank` and `CurrentDutyTitle` `string?`, so a non-astronaut gets `null` rather than `""` (RULE-2). The navigation properties use `= null!`, as EF Core's documentation recommends; the build now has no warnings. | ✅ `0c80488` |
 | T24 | Add `ProducesResponseType` attributes and XML comments for Swagger. | ⬜ |
-| T38 | Return duties as an `AstronautDutyDto` (matching how `PersonAstronaut` works for people) rather than the `AstronautDuty` EF entity, which leaks its `Person` link as `"person": null` and ties the API's response shape to the database entity (`GetAstronautDutiesByName.cs:48`). | ⬜ |
+| T38 | Return duties as an `AstronautDutyDto` (matching how `PersonAstronaut` works for people) rather than the `AstronautDuty` EF entity, which leaks its `Person` link as `"person": null` and ties the API's response shape to the database entity (`GetAstronautDutiesByName.cs:48`). Each duty now returns `id`, `rank`, `dutyTitle`, `dutyStartDate` and `dutyEndDate`; `personId` is dropped as redundant with `person.personId`. | ✅ |
 
 ### Phase 5 — Requirements gaps
 
