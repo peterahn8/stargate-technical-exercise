@@ -64,7 +64,7 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 |----|-----------------|-------------------------------------------|-------------------|-------|--------|
 | UI-1 | Successfully implement a web application that demonstrates production level quality. Angular is preferred. | A production-quality web application, built in Angular (the preferred option). | T30–T35, T40, T41 | `[UI-1]` · 40 | 🟡 the activity feed is still to come (T41) |
 | UI-2 | Implement call(s) to retrieve an individual's astronaut duties. | The UI calls the API to retrieve an individual's astronaut duties. | T26, T30, T32 | `[UI-2]` · 9 | ✅ |
-| UI-3 | Display the progress of the process and the results in a visually sophisticated and appealing manner. | The UI shows the progress of each request *(loading, empty and error states)* and its results in a visually sophisticated and appealing way. | T30, T32, T34, T41 | `[UI-3]` · 26 | 🟡 progress states and results are done; the activity feed is still to come (T41) |
+| UI-3 | Display the progress of the process and the results in a visually sophisticated and appealing manner. | The UI shows the progress of each request *(loading, empty and error states)* and its results in a visually sophisticated and appealing way. | T30, T32, T34, T41 | `[UI-3]` · 26, `AC=UI-3` · 3 | 🟡 progress states and results are done; the activity feed is still to come (T41) |
 
 ### Spec tasks
 
@@ -74,7 +74,7 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 | SPEC-2 | Enforce the rules | Every `RULE-n` row is ✅. | see RULE-1…7 | — | ✅ |
 | SPEC-3 | Improve defensive coding | *Untrusted input is validated or parameterized; failures return a consistent error contract (400/404/500) without leaking internals; the build has no nullable warnings.* | T07, T19, T21–T23 | `AC=SPEC-3` · 11 | ✅ |
 | SPEC-4 | Add unit tests — identify the most impactful methods requiring tests; reach >50% code coverage | The business logic (duty handler, pre-processors, queries) is tested first; line coverage is >50%, measured with coverlet; *each test is tagged with the criteria it proves (D8).* | T09–T12, D8 | coverage 63.1% line (T12); all 34 tests tagged | ✅ |
-| SPEC-5 | Implement process logging — Log exceptions; Log successes; Store the logs in the database | Every request's success or exception is written to a database table; *a failed request's log entry survives the rollback of its transaction.* | T27–T29 | `AC=SPEC-5` · 10 | ✅ |
+| SPEC-5 | Implement process logging — Log exceptions; Log successes; Store the logs in the database | Every request's success or exception is written to a database table; *a failed request's log entry survives the rollback of its transaction.* | T27–T29 | `AC=SPEC-5` · 12 | ✅ |
 
 ---
 
@@ -155,8 +155,8 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 | T33 | Forms, as dialogs: *Add person* on the list and *Add duty* on the person page. Validation mirrors the API's rules with its own wording (blank text, D13; start after the current duty, D1; RETIRED rules, D2), and the date picker won't offer dates before the current duty. Anything the API still rejects shows its message in the dialog. On success the page reloads. | ✅ `18329d2` |
 | T34 | Progress and result states: loading skeletons on a page's first load (announced to screen readers), with reloads keeping the content visible under a progress bar; buttons disabled while saving; empty and error states; and success snackbars that name what happened ("John Doe retired.", "… returned to service as Commander."). A stopped API now reads "The API couldn't be reached. Is it running?" rather than "HTTP 502". *(Spec: "display the progress of the process")* → D18 | ✅ `1df3aeb` |
 | T35 | Frontend tests for the services and key components (Vitest; `describe` names carry the requirement ID). Each UI task added its own tests; this task added a UI coverage report (`ng test --coverage`, with `@vitest/coverage-v8`) and filled the gaps it showed: row and *View* navigation, cancelled dialogs, a retired person's career end, a non-HTTP failure. **99.45% line coverage, 69 tests** (2026-10-26); what's left uncovered is defensive code. → D18 | ✅ `81225a5` |
-| T40 | Rename a person from the UI, using `PUT /Person/{name}` (T25): a *Rename* button on the person page opens a dialog with the current name filled in; the API's 409 shows inline. On success the page moves to the new name's address (replacing the old one in the browser history) and confirms with a snackbar. → D16, D18 | ✅ |
-| T41 | Activity feed: a read-only `GET /ProcessLog` endpoint (most recent first) and a UI panel showing recent operations with outcome and duration. → D17, D18 | ⬜ |
+| T40 | Rename a person from the UI, using `PUT /Person/{name}` (T25): a *Rename* button on the person page opens a dialog with the current name filled in; the API's 409 shows inline. On success the page moves to the new name's address (replacing the old one in the browser history) and confirms with a snackbar. → D16, D18 | ✅ `5f3d041` |
+| T41 | Activity feed: a read-only `GET /ProcessLog` endpoint (most recent first) and a UI panel showing recent operations with outcome and duration. **API done:** `GET /ProcessLog?take=` (default 20, kept between 1 and 100) returns timestamp, request type, outcome, level, message and duration only, never exception details or payloads; reading the log isn't itself logged (`IUnloggedRequest`). **UI panel:** still to come. → D17, D18 | ⬜ |
 
 ### Phase 8 — Wrap-up
 
