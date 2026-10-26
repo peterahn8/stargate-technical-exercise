@@ -25,7 +25,7 @@ Code paths below are relative to `tech_exercise/package/exercise1/api/`. Repo-ro
 ### Conventions
 
 - **Commits:** `<type>(Tnn): <summary>`, e.g. `fix(T07): parameterize Dapper queries`. `git log --grep T07` finds a task's commits.
-- **Tests:** tag each test with the criteria it proves, e.g. `[Trait("AC", "RULE-5")]`. `dotnet test --filter "AC=RULE-5"` runs the proof for one criterion. → D8
+- **Tests:** tag each test with the criteria it proves, e.g. `[Trait("AC", "RULE-5")]`. `dotnet test --filter "AC=RULE-5"` runs the proof for one criterion. The rubric's Tests column shows the filter and the number of tests, e.g. `AC=RULE-5` · 3. → D8
 - **Decisions:** an ambiguous rule or design choice gets a `Dn` row before it's implemented. The user decides; the agent implements.
 
 ---
@@ -38,7 +38,7 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 
 | ID | Spec (verbatim) | Acceptance criterion (our interpretation) | Tasks / decisions | Tests | Status |
 |----|-----------------|-------------------------------------------|-------------------|-------|--------|
-| RULE-1 | A Person is uniquely identified by their Name. | A person is uniquely identified by name: *creating a person whose name already exists is rejected, and the database enforces uniqueness.* | T08, T11, T18, D4 | — | 🟡 untested; duplicates rejected, but as 500 rather than 400 (T21); names not yet trimmed (T18) |
+| RULE-1 | A Person is uniquely identified by their Name. | A person is uniquely identified by name: *creating a person whose name already exists is rejected, and the database enforces uniqueness.* | T08, T11, T18, D4 | `AC=RULE-1` · 1 | 🟡 untested; duplicates rejected, but as 500 rather than 400 (T21); names not yet trimmed (T18) |
 | RULE-2 | A Person who has not had an astronaut assignment will not have Astronaut records. | A person with no astronaut assignment has no `AstronautDetail` and no `AstronautDuty` rows; *the API returns null astronaut fields for them.* | T10, T23 | — | 🟡 untested; rank and title come back as `""`, not null |
 | RULE-3 | A Person will only ever hold one current Astronaut Duty Title, Start Date, and Rank at a time. | A person has at most one current duty (title, start date, rank), *and `AstronautDetail` always reflects it (spec Definitions #2).* | T10, T14, T20 | — | 🟡 a backdated duty becomes "current" |
 | RULE-4 | A Person's Current Duty will not have a Duty End Date. | The current duty has no `DutyEndDate`; *every other duty has one (inferred from RULE-5).* | T10, T14 | — | 🟡 breaks with backdating |
@@ -50,9 +50,9 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 
 | ID | Spec (verbatim) | Acceptance criterion (our interpretation) | Tasks / decisions | Tests | Status |
 |----|-----------------|-------------------------------------------|-------------------|-------|--------|
-| API-1 | Retrieve a person by name. | Retrieve a person by name, *safe for any name; an unknown name returns 404 (D3).* | T07, T11, T16, T21, D3 | — | 🟡 untested; unknown name → 200 with null (T16) |
+| API-1 | Retrieve a person by name. | Retrieve a person by name, *safe for any name; an unknown name returns 404 (D3).* | T07, T11, T16, T21, D3 | `AC=API-1` · 1 | 🟡 untested; unknown name → 200 with null (T16) |
 | API-2 | Retrieve all people. | Retrieve all people. | T11 | — | 🟡 works, untested |
-| API-3 | Add/update a person by name. | Add or update a person by name. | T08, T11, T25 | — | ❌ no update (T25); duplicates rejected as 500 (T21) |
+| API-3 | Add/update a person by name. | Add or update a person by name. | T08, T11, T25 | `AC=API-3` · 1 | ❌ no update (T25); duplicates rejected as 500 (T21) |
 | API-4 | Retrieve Astronaut Duty by name. | Retrieve *all of* a person's astronaut duties by name. *An unknown name returns 404; a known person with no astronaut records returns 200 with null astronaut fields and an empty duties list (D3).* | T06, T07, T11, T16, T21, T38 | — | 🟡 returns duties; unknown name → 500 (T16) |
 | API-5 | Add an Astronaut Duty. | Add an astronaut duty, *applying RULE-3 to RULE-7.* | T07, T10, T13–T15, T19–T21 | — | 🟡 rule violations above |
 
@@ -94,13 +94,13 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 |----|------|--------|
 | T06 | `GET /AstronautDuty/{name}` sends `GetPersonByName`; it should send `GetAstronautDutiesByName` (`Controllers/AstronautDutyController.cs:24`). | ✅ `7f7a960` |
 | T07 | **Security:** remove the SQL built by string interpolation. Parameterize the Dapper queries in the query handlers (`GetPersonByName.cs:26`, `GetAstronautDutiesByName.cs:28,34`), and move `CreateAstronautDutyHandler`'s Dapper reads (`CreateAstronautDuty.cs:56,60,90`) to EF, so commands use only EF. → D6. Repro: `GET /Person/' OR 1=1 --` returns a person; `GET /Person/O'Brien` returns a 500. | ✅ `9d16290` |
-| T08 | Reject duplicate names: register `CreatePersonPreProcessor` (missing from `Program.cs:18`), and make `Person.Name` `COLLATE NOCASE` with a unique index (one migration). → D4 | ✅ |
+| T08 | Reject duplicate names: register `CreatePersonPreProcessor` (missing from `Program.cs:18`), and make `Person.Name` `COLLATE NOCASE` with a unique index (one migration). → D4 | ✅ `bb13ea6` |
 
 ### Phase 2 — Tests (written before the rule fixes)
 
 | ID | Task | Status |
 |----|------|--------|
-| T09 | Create an xUnit test project with in-memory SQLite (a real provider, so the Dapper SQL runs) and coverlet for coverage. → D8 | ⬜ |
+| T09 | Create an xUnit test project with in-memory SQLite (a real provider, so the Dapper SQL runs) and coverlet for coverage. Run from `tech_exercise/package/exercise1/`: `dotnet test Stargate.sln`; one criterion: `--filter "AC=RULE-1"`; coverage: `--collect:"XPlat Code Coverage"`, then `dotnet reportgenerator -reports:"tests/StargateAPI.Tests/TestResults/*/coverage.cobertura.xml" -targetdir:coverage -reporttypes:Html`. → D8, D11 | ✅ |
 | T10 | Tests for `CreateAstronautDutyHandler`: first duty, a subsequent duty, RETIRED as the first duty, RETIRED after other duties, backdated duty, unknown person. | ⬜ |
 | T11 | Tests for the pre-processors (person and duty) and for the queries (found and not found). | ⬜ |
 | T12 | Reach >50% coverage. Record the number here: `__%`. | ⬜ |
@@ -179,6 +179,7 @@ Each entry records a choice, why it was made, and what was rejected. The exercis
 | D8 | How are tests traced to acceptance criteria? | **xUnit traits** with one key for every criterion type, e.g. `[Trait("AC", "RULE-5")]`, `[Trait("AC", "API-1")]`. | Lets you run the proof for a single criterion (`dotnet test --filter "AC=RULE-5"`) and group reports by criterion. Naming conventions alone can't be filtered as cleanly. | T09–T12 |
 | D9 | How is `dotnet-ef` installed? | **Local tool manifest** at the repo root, pinned to 8.x. | Versioned in the repo; anyone gets it with `dotnet tool restore`. A global install only works on one machine. | T04 |
 | D10 | `CareerStartDate`: the model says NOT NULL, the database says nullable — which wins? | **NOT NULL**, via a new migration. | Every astronaut has a career start date, so the database should enforce it. Making the property nullable would allow a state that should be impossible. `InitialCreate` isn't edited because it has already been applied. | T05 |
+| D11 | How is the test project set up? | **`tests/StargateAPI.Tests`** next to `api/`, plus `Stargate.sln`. Tests send requests **through the real MediatR pipeline** (pre-processors included), registered by the same `AddStargateMediatR()` the API uses, against an **in-memory SQLite database built by the real migrations**, one per test. xUnit's built-in `Assert`. Coverage with coverlet plus **ReportGenerator** (local tool), excluding generated migrations. Names: `Method_Scenario_ExpectedResult`. HTTP-level tests (`WebApplicationFactory`) come later, for status codes (T16, T21). | Testing through the pipeline checks a rule's validation and its handler together, and catches a missing registration (the T08 bug), which calling handlers directly would miss. Sharing one registration method stops tests and API drifting apart. Running the real migrations tests the actual schema (`NOCASE`, unique index, NOT NULL). Rejected: *calling handlers directly* (two tests per rule; misses registration bugs); *only HTTP tests* (slower; more integration than unit testing); *`EnsureCreated()`* (skips the migrations); *FluentAssertions* (v8+ needs a commercial licence); *coverage without a report* (nothing to show for SPEC-4). | T09–T12 |
 
 ## Log
 
