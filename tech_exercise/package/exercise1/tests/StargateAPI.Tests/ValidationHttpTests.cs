@@ -4,8 +4,8 @@ using System.Net.Http.Json;
 namespace StargateAPI.Tests
 {
     /// <summary>
-    /// HTTP status codes for invalid input. Missing JSON properties are rejected by ASP.NET before the
-    /// pipeline runs; blank text is rejected by the pre-processors, whose errors become 400s in T21.
+    /// HTTP responses for invalid input (D13, D15). Missing JSON properties are rejected by ASP.NET
+    /// before the pipeline runs; blank text by the pre-processors. Both use the BaseResponse shape.
     /// </summary>
     public class ValidationHttpTests : IDisposable
     {
@@ -21,25 +21,29 @@ namespace StargateAPI.Tests
         }
 
         [Fact]
+        [Trait("AC", "SPEC-3")]
         [Trait("AC", "API-5")]
         public async Task PostAstronautDuty_MissingStartDate_Returns400()
         {
             var response = await _client.PostAsJsonAsync("/AstronautDuty",
                 new { name = "John Doe", rank = "CPT", dutyTitle = "Commander" });
 
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            await ErrorResponse.AssertAsync(response, HttpStatusCode.BadRequest,
+                "The request is invalid: required fields are missing or malformed.");
         }
 
-        [Fact(Skip = "Pending T21: PersonController turns validation errors into 500s")]
+        [Fact]
+        [Trait("AC", "SPEC-3")]
         [Trait("AC", "API-3")]
         public async Task PostPerson_BlankName_Returns400()
         {
             var response = await _client.PostAsJsonAsync("/Person", "   ");
 
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            await ErrorResponse.AssertAsync(response, HttpStatusCode.BadRequest, "A name is required.");
         }
 
-        [Fact(Skip = "Pending T21: AstronautDutyController doesn't handle the validation exception, so it escapes the app")]
+        [Fact]
+        [Trait("AC", "SPEC-3")]
         [Trait("AC", "API-5")]
         public async Task PostAstronautDuty_BlankTitle_Returns400()
         {
@@ -48,7 +52,7 @@ namespace StargateAPI.Tests
             var response = await _client.PostAsJsonAsync("/AstronautDuty",
                 new { name = "John Doe", rank = "CPT", dutyTitle = " ", dutyStartDate = "2024-01-01" });
 
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            await ErrorResponse.AssertAsync(response, HttpStatusCode.BadRequest, "A duty title is required.");
         }
     }
 }

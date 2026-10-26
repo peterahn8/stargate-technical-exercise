@@ -42,7 +42,8 @@ namespace StargateAPI.Business.Commands
 
             var person = _context.People.AsNoTracking().FirstOrDefault(z => z.Name == request.Name);
 
-            if (person is null) throw new BadHttpRequestException("Bad Request");
+            if (person is null)
+                throw new BadHttpRequestException($"Person '{request.Name}' not found.", StatusCodes.Status404NotFound);
 
             // Duties only append to the timeline: a new duty must start after the current one (D1).
             // This also rejects duplicates, which share a start date with an existing duty.

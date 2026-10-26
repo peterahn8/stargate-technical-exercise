@@ -1,12 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using StargateAPI.Business;
 using StargateAPI.Business.Data;
+using StargateAPI.Controllers;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options => options.InvalidModelStateResponseFactory = ApiExceptionHandler.InvalidModelState);
+builder.Services.AddExceptionHandler<ApiExceptionHandler>();
+// Required by UseExceptionHandler() in .NET 8; never used, since ApiExceptionHandler handles every exception.
+builder.Services.AddProblemDetails();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -18,6 +23,8 @@ builder.Services.AddStargateMediatR();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+app.UseExceptionHandler();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
