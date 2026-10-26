@@ -85,7 +85,7 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 | T01 | Add `.gitignore` at the repo root (dotnet, node, coverage, SQLite, OS). Untrack the committed `bin/`, `obj/` and `tech_exercise_v.0.0.4.tgz`. Keep the shared `.idea/` files; Rider's own `.idea/.gitignore` already excludes `workspace.xml`. | ✅ `7819070` |
 | T02 | Apply EF migrations at startup, in Development only (`Database.Migrate()`), so a fresh clone needs only `dotnet run`. *(Spec task 1)* → D7 | ✅ `aa69c89` |
 | T03 | Dev-only seeder: runs after the migration, only when the database is empty, using fixed dates. The data covers a non-astronaut, an active astronaut with history and a retiree. Remove the commented-out `SeedData()` (`StargateContext.cs:22`). → D5 | ⬜ |
-| T04 | Add a local tool manifest at the repo root (`.config/dotnet-tools.json`) pinning `dotnet-ef` 8.x; contributors run `dotnet tool restore`. → D9 | ⬜ |
+| T04 | Add a local tool manifest at the repo root (`.config/dotnet-tools.json`) pinning `dotnet-ef` 8.x; contributors run `dotnet tool restore`. → D9 | ✅ |
 | T05 | Make `AstronautDetail.CareerStartDate` NOT NULL in the database, via a new migration (don't edit `InitialCreate`). → D10 | ⬜ |
 
 ### Phase 1 — Quick, high-impact bug fixes
