@@ -110,7 +110,7 @@ namespace StargateAPI.Tests
             Assert.Null(result.Person);
         }
 
-        [Fact(Skip = "Pending T23: rank and title come back as empty strings")]
+        [Fact]
         [Trait("AC", "RULE-2")]
         [Trait("AC", "API-1")]
         public async Task GetPersonByName_NonAstronaut_ReturnsNullAstronautFields()

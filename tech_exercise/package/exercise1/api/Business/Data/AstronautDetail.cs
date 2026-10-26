@@ -19,7 +19,8 @@ namespace StargateAPI.Business.Data
 
         public DateTime? CareerEndDate { get; set; }
 
-        public virtual Person Person { get; set; }
+        // Always set for a stored row; null! tells the compiler EF fills it in.
+        public virtual Person Person { get; set; } = null!;
     }
 
     public class AstronautDetailConfiguration : IEntityTypeConfiguration<AstronautDetail>

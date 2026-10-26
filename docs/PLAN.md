@@ -40,7 +40,7 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 | ID | Spec (verbatim) | Acceptance criterion (our interpretation) | Tasks / decisions | Tests | Status |
 |----|-----------------|-------------------------------------------|-------------------|-------|--------|
 | RULE-1 | A Person is uniquely identified by their Name. | A person is uniquely identified by name: *creating a person whose name already exists is rejected, and the database enforces uniqueness.* | T08, T11, T18, T21, D4 | `AC=RULE-1` · 8 | ✅ |
-| RULE-2 | A Person who has not had an astronaut assignment will not have Astronaut records. | A person with no astronaut assignment has no `AstronautDetail` and no `AstronautDuty` rows; *the API returns null astronaut fields for them.* | T10, T23 | `AC=RULE-2` · 3 (+1 skipped) | 🟡 rank and title come back as `""`, not null (T23) |
+| RULE-2 | A Person who has not had an astronaut assignment will not have Astronaut records. | A person with no astronaut assignment has no `AstronautDetail` and no `AstronautDuty` rows; *the API returns null astronaut fields for them.* | T10, T23 | `AC=RULE-2` · 4 | ✅ |
 | RULE-3 | A Person will only ever hold one current Astronaut Duty Title, Start Date, and Rank at a time. | A person has at most one current duty (title, start date, rank), *and `AstronautDetail` always reflects it (spec Definitions #2).* | T10, T14, T20 | `AC=RULE-3` · 4 | ✅ |
 | RULE-4 | A Person's Current Duty will not have a Duty End Date. | The current duty has no `DutyEndDate`; *every other duty has one (inferred from RULE-5).* | T10, T14, T20 | `AC=RULE-4` · 5 | ✅ |
 | RULE-5 | A Person's Previous Duty End Date is set to the day before the New Astronaut Duty Start Date when a new Astronaut Duty is received for a Person. | When a new duty is received, the previous duty's `DutyEndDate` = new `DutyStartDate` − 1 day. *"Previous" means the current duty; a new duty must start strictly after it, otherwise it's rejected with 400 (D1).* | T10, T14, T20, D1 | `AC=RULE-5` · 4 | ✅ |
@@ -51,7 +51,7 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 
 | ID | Spec (verbatim) | Acceptance criterion (our interpretation) | Tasks / decisions | Tests | Status |
 |----|-----------------|-------------------------------------------|-------------------|-------|--------|
-| API-1 | Retrieve a person by name. | Retrieve a person by name, *safe for any name; an unknown name returns 404 (D3).* | T07, T11, T16, T21, D3 | `AC=API-1` · 8 (+1 skipped) | 🟡 non-astronaut rank and title come back as `""` (T23) |
+| API-1 | Retrieve a person by name. | Retrieve a person by name, *safe for any name; an unknown name returns 404 (D3).* | T07, T11, T16, T21, D3 | `AC=API-1` · 9 | ✅ |
 | API-2 | Retrieve all people. | Retrieve all people. | T11 | `AC=API-2` · 2 | ✅ |
 | API-3 | Add/update a person by name. | Add or update a person by name. | T08, T11, T25 | `AC=API-3` · 9 | ❌ no update or rename (T25) |
 | API-4 | Retrieve Astronaut Duty by name. | Retrieve *all of* a person's astronaut duties by name. *An unknown name returns 404; a known person with no astronaut records returns 200 with null astronaut fields and an empty duties list (D3).* | T06, T07, T11, T16, T21, T38 | `AC=API-4` · 9 | 🟡 duties returned as EF entities (T38) |
@@ -70,8 +70,8 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 | ID | Spec (verbatim) | Acceptance criterion (our interpretation) | Tasks / decisions | Tests | Status |
 |----|-----------------|-------------------------------------------|-------------------|-------|--------|
 | SPEC-1 | Generate the database — This is your source and storage location | The SQLite database is generated from the EF migrations, *automatically at startup in Development; the file itself isn't committed (D7).* | T02–T05, T39, D7 | — | 🟡 works (verified manually), untested |
-| SPEC-2 | Enforce the rules | Every `RULE-n` row is ✅. | see RULE-1…7 | — | 🟡 every rule is ✅ except RULE-2 (T23) |
-| SPEC-3 | Improve defensive coding | *Untrusted input is validated or parameterized; failures return a consistent error contract (400/404/500) without leaking internals; the build has no nullable warnings.* | T07, T19, T21–T23 | `AC=SPEC-3` · 10 | 🟡 nullable warnings (T23) |
+| SPEC-2 | Enforce the rules | Every `RULE-n` row is ✅. | see RULE-1…7 | — | ✅ |
+| SPEC-3 | Improve defensive coding | *Untrusted input is validated or parameterized; failures return a consistent error contract (400/404/500) without leaking internals; the build has no nullable warnings.* | T07, T19, T21–T23 | `AC=SPEC-3` · 10 | ✅ |
 | SPEC-4 | Add unit tests — identify the most impactful methods requiring tests; reach >50% code coverage | The business logic (duty handler, pre-processors, queries) is tested first; line coverage is >50%, measured with coverlet; *each test is tagged with the criteria it proves (D8).* | T09–T12, D8 | coverage 63.1% line (T12); all 34 tests tagged | ✅ |
 | SPEC-5 | Implement process logging — Log exceptions; Log successes; Store the logs in the database | Every request's success or exception is written to a database table; *a failed request's log entry survives the rollback of its transaction.* | T27–T29 | — | ⬜ |
 
@@ -124,8 +124,8 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 | ID | Task | Status |
 |----|------|--------|
 | T21 | Consistent error handling. `CreateAstronautDuty` has no try/catch and leaks stack traces; the other actions catch everything, return 500 and leak `ex.Message`. Replace with a global exception handler: validation → 400, a database unique-constraint conflict (such as T20's race, or two simultaneous identical person creations) → 409 Conflict, anything unexpected → 500 with a generic message. (Not found is a result, not an exception; see D3.) Done with an `IExceptionHandler` that writes the `BaseResponse` shape for every error, including ASP.NET's automatic 400s; the controllers' catch-all blocks are gone. A duplicate person is a 409 and a duty for an unknown person a 404. → D15 | ✅ `fa0ce37` |
-| T22 | Make the pre-processors async (they currently call EF synchronously). | ✅ |
-| T23 | Resolve the nullable warnings: 6 distinct at the start, 2 left after T16 (the `Person` navigation properties on `AstronautDetail` and `AstronautDuty`). Make `PersonAstronaut.CurrentRank` and `CurrentDutyTitle` `string?`, so a non-astronaut gets `null` rather than `""` (RULE-2). | ⬜ |
+| T22 | Make the pre-processors async (they currently call EF synchronously). | ✅ `2f72d52` |
+| T23 | Resolve the nullable warnings: 6 distinct at the start, 2 left after T16 (the `Person` navigation properties on `AstronautDetail` and `AstronautDuty`). Make `PersonAstronaut.CurrentRank` and `CurrentDutyTitle` `string?`, so a non-astronaut gets `null` rather than `""` (RULE-2). The navigation properties use `= null!`, as EF Core's documentation recommends; the build now has no warnings. | ✅ |
 | T24 | Add `ProducesResponseType` attributes and XML comments for Swagger. | ⬜ |
 | T38 | Return duties as an `AstronautDutyDto` (matching how `PersonAstronaut` works for people) rather than the `AstronautDuty` EF entity, which leaks its `Person` link as `"person": null` and ties the API's response shape to the database entity (`GetAstronautDutiesByName.cs:48`). | ⬜ |
 
