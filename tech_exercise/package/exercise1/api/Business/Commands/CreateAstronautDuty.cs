@@ -33,9 +33,15 @@ namespace StargateAPI.Business.Commands
 
             if (person is null) throw new BadHttpRequestException("Bad Request");
 
-            var verifyNoPreviousDuty = _context.AstronautDuties.FirstOrDefault(z => z.PersonId == person.Id && z.DutyTitle == request.DutyTitle && z.DutyStartDate == request.DutyStartDate);
+            // Duties only append to the timeline: a new duty must start after the current one (D1).
+            // This also rejects duplicates, which share a start date with an existing duty.
+            var currentDuty = _context.AstronautDuties.AsNoTracking()
+                .Where(z => z.PersonId == person.Id)
+                .OrderByDescending(z => z.DutyStartDate)
+                .FirstOrDefault();
 
-            if (verifyNoPreviousDuty is not null) throw new BadHttpRequestException("Bad Request");
+            if (currentDuty is not null && request.DutyStartDate.Date <= currentDuty.DutyStartDate)
+                throw new BadHttpRequestException($"A new duty must start after the current duty's start date ({currentDuty.DutyStartDate:yyyy-MM-dd}).");
 
             return Task.CompletedTask;
         }

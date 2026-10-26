@@ -144,7 +144,7 @@ namespace StargateAPI.Tests
             Assert.Equal(new DateTime(2025, 5, 31), Duties()[1].DutyEndDate);
         }
 
-        [Fact(Skip = "Pending T14 (D1): backdated duties are accepted")]
+        [Fact]
         [Trait("AC", "RULE-5")]
         public async Task CreateAstronautDuty_BackdatedDuty_IsRejected()
         {
@@ -158,7 +158,7 @@ namespace StargateAPI.Tests
             Assert.Null(duty.DutyEndDate);
         }
 
-        [Fact(Skip = "Pending T14 (D1): same-day duties are accepted")]
+        [Fact]
         [Trait("AC", "RULE-5")]
         public async Task CreateAstronautDuty_SameDayAsCurrentDuty_IsRejected()
         {
