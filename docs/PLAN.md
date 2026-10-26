@@ -54,7 +54,7 @@ Status: ✅ met and tested · 🟡 works on the happy path / partially met · �
 ## Phase 0 — Setup
 
 - [x] **S1** Add `.gitignore` (dotnet, node, coverage, SQLite, OS). Untrack the committed `bin/`, `obj/` and `tech_exercise_v.0.0.4.tgz`. Keep the shared `.idea/` files; Rider's own `.idea/.gitignore` already excludes `workspace.xml`.
-- [ ] **S2** Generate the database. *(Spec task 1)* → D7
+- [x] **S2** Generate the database. *(Spec task 1)* → D7
   - Apply migrations at startup, in Development only (`db.Database.Migrate()`), so a fresh clone needs only `dotnet run`. Add a comment explaining why: migrating at startup is avoided in production because multiple instances can race.
   - `dotnet-ef` (`dotnet tool install -g dotnet-ef --version 8.*`) is needed only to *author* new migrations.
 - [ ] **S3** Decide on seed data: re-enable it with fixed dates or add a dev-only seeder (`StargateContext.cs:22`, which currently uses `DateTime.Now`). → D5
