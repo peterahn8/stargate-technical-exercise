@@ -25,7 +25,7 @@ Code paths below are relative to `tech_exercise/package/exercise1/api/`. Repo-ro
 ### Conventions
 
 - **Commits:** `<type>(Tnn): <summary>`, e.g. `fix(T07): parameterize Dapper queries`. `git log --grep T07` finds a task's commits.
-- **Tests:** tag each test with the criteria it proves, e.g. `[Trait("AC", "RULE-5")]`. `dotnet test --filter "AC=RULE-5"` runs the proof for one criterion. The rubric's Tests column shows the filter and the number of tests, e.g. `AC=RULE-5` · 3. → D8
+- **Tests:** tag each test with the criteria it proves, e.g. `[Trait("AC", "RULE-5")]`. `dotnet test --filter "AC=RULE-5"` runs the proof for one criterion. The rubric's Tests column shows the filter and the number of passing tests, plus any skipped ones, e.g. `AC=RULE-5` · 1 (+2 skipped). → D8
 - **Decisions:** an ambiguous rule or design choice gets a `Dn` row before it's implemented. The user decides; the agent implements.
 
 ---
@@ -38,23 +38,23 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 
 | ID | Spec (verbatim) | Acceptance criterion (our interpretation) | Tasks / decisions | Tests | Status |
 |----|-----------------|-------------------------------------------|-------------------|-------|--------|
-| RULE-1 | A Person is uniquely identified by their Name. | A person is uniquely identified by name: *creating a person whose name already exists is rejected, and the database enforces uniqueness.* | T08, T11, T18, D4 | `AC=RULE-1` · 1 | 🟡 untested; duplicates rejected, but as 500 rather than 400 (T21); names not yet trimmed (T18) |
-| RULE-2 | A Person who has not had an astronaut assignment will not have Astronaut records. | A person with no astronaut assignment has no `AstronautDetail` and no `AstronautDuty` rows; *the API returns null astronaut fields for them.* | T10, T23 | — | 🟡 untested; rank and title come back as `""`, not null |
-| RULE-3 | A Person will only ever hold one current Astronaut Duty Title, Start Date, and Rank at a time. | A person has at most one current duty (title, start date, rank), *and `AstronautDetail` always reflects it (spec Definitions #2).* | T10, T14, T20 | — | 🟡 a backdated duty becomes "current" |
-| RULE-4 | A Person's Current Duty will not have a Duty End Date. | The current duty has no `DutyEndDate`; *every other duty has one (inferred from RULE-5).* | T10, T14 | — | 🟡 breaks with backdating |
-| RULE-5 | A Person's Previous Duty End Date is set to the day before the New Astronaut Duty Start Date when a new Astronaut Duty is received for a Person. | When a new duty is received, the previous duty's `DutyEndDate` = new `DutyStartDate` − 1 day. *"Previous" means the current duty; a new duty must start strictly after it, otherwise it's rejected with 400 (D1).* | T10, T14, D1 | — | ❌ backdating yields end < start |
-| RULE-6 | A Person is classified as 'Retired' when a Duty Title is 'RETIRED'. | A person is classified as retired when *their current* duty title is `RETIRED`. *A retired person can return to service; a new duty un-retires them (D2). The title is compared ignoring case (D4).* | T10, T17, T18, D2, D4 | — | ❌ case-sensitive; return to service leaves `CareerEndDate` set |
-| RULE-7 | A Person's Career End Date is one day before the Retired Duty Start Date. | Career end date = retired duty start date − 1 day. *It's cleared when the person returns to service, and set again by any later retirement. RETIRED can't be a person's first duty, so a career never ends before it starts (D2).* | T10, T15, T17, D2 | — | ❌ wrong when RETIRED is the first duty |
+| RULE-1 | A Person is uniquely identified by their Name. | A person is uniquely identified by name: *creating a person whose name already exists is rejected, and the database enforces uniqueness.* | T08, T11, T18, D4 | `AC=RULE-1` · 1 | 🟡 duplicates rejected, but as 500 rather than 400 (T21); names not yet trimmed (T18) |
+| RULE-2 | A Person who has not had an astronaut assignment will not have Astronaut records. | A person with no astronaut assignment has no `AstronautDetail` and no `AstronautDuty` rows; *the API returns null astronaut fields for them.* | T10, T23 | `AC=RULE-2` · 1 | 🟡 rank and title come back as `""`, not null (T23) |
+| RULE-3 | A Person will only ever hold one current Astronaut Duty Title, Start Date, and Rank at a time. | A person has at most one current duty (title, start date, rank), *and `AstronautDetail` always reflects it (spec Definitions #2).* | T10, T14, T20 | `AC=RULE-3` · 3 | 🟡 a backdated duty becomes "current" |
+| RULE-4 | A Person's Current Duty will not have a Duty End Date. | The current duty has no `DutyEndDate`; *every other duty has one (inferred from RULE-5).* | T10, T14 | `AC=RULE-4` · 3 | 🟡 breaks with backdating |
+| RULE-5 | A Person's Previous Duty End Date is set to the day before the New Astronaut Duty Start Date when a new Astronaut Duty is received for a Person. | When a new duty is received, the previous duty's `DutyEndDate` = new `DutyStartDate` − 1 day. *"Previous" means the current duty; a new duty must start strictly after it, otherwise it's rejected with 400 (D1).* | T10, T14, D1 | `AC=RULE-5` · 1 (+2 skipped) | ❌ backdating yields end < start |
+| RULE-6 | A Person is classified as 'Retired' when a Duty Title is 'RETIRED'. | A person is classified as retired when *their current* duty title is `RETIRED`. *A retired person can return to service; a new duty un-retires them (D2). The title is compared ignoring case (D4).* | T10, T17, T18, D2, D4 | `AC=RULE-6` · 1 (+2 skipped) | ❌ case-sensitive; return to service leaves `CareerEndDate` set |
+| RULE-7 | A Person's Career End Date is one day before the Retired Duty Start Date. | Career end date = retired duty start date − 1 day. *It's cleared when the person returns to service, and set again by any later retirement. RETIRED can't be a person's first duty, so a career never ends before it starts (D2).* | T10, T15, T17, D2 | `AC=RULE-7` · 1 (+3 skipped) | ❌ wrong when RETIRED is the first duty |
 
 ### API requirements
 
 | ID | Spec (verbatim) | Acceptance criterion (our interpretation) | Tasks / decisions | Tests | Status |
 |----|-----------------|-------------------------------------------|-------------------|-------|--------|
-| API-1 | Retrieve a person by name. | Retrieve a person by name, *safe for any name; an unknown name returns 404 (D3).* | T07, T11, T16, T21, D3 | `AC=API-1` · 1 | 🟡 untested; unknown name → 200 with null (T16) |
+| API-1 | Retrieve a person by name. | Retrieve a person by name, *safe for any name; an unknown name returns 404 (D3).* | T07, T11, T16, T21, D3 | `AC=API-1` · 1 | 🟡 unknown name → 200 with null (T16) |
 | API-2 | Retrieve all people. | Retrieve all people. | T11 | — | 🟡 works, untested |
 | API-3 | Add/update a person by name. | Add or update a person by name. | T08, T11, T25 | `AC=API-3` · 1 | ❌ no update (T25); duplicates rejected as 500 (T21) |
 | API-4 | Retrieve Astronaut Duty by name. | Retrieve *all of* a person's astronaut duties by name. *An unknown name returns 404; a known person with no astronaut records returns 200 with null astronaut fields and an empty duties list (D3).* | T06, T07, T11, T16, T21, T38 | — | 🟡 returns duties; unknown name → 500 (T16) |
-| API-5 | Add an Astronaut Duty. | Add an astronaut duty, *applying RULE-3 to RULE-7.* | T07, T10, T13–T15, T19–T21 | — | 🟡 rule violations above |
+| API-5 | Add an Astronaut Duty. | Add an astronaut duty, *applying RULE-3 to RULE-7.* | T07, T10, T13–T15, T19–T21 | `AC=API-5` · 3 | 🟡 rule violations above |
 
 ### UI requirements
 
@@ -100,8 +100,8 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 
 | ID | Task | Status |
 |----|------|--------|
-| T09 | Create an xUnit test project with in-memory SQLite (a real provider, so the Dapper SQL runs) and coverlet for coverage. Run from `tech_exercise/package/exercise1/`: `dotnet test Stargate.sln`; one criterion: `--filter "AC=RULE-1"`; coverage: `--collect:"XPlat Code Coverage"`, then `dotnet reportgenerator -reports:"tests/StargateAPI.Tests/TestResults/*/coverage.cobertura.xml" -targetdir:coverage -reporttypes:Html`. → D8, D11 | ✅ |
-| T10 | Tests for `CreateAstronautDutyHandler`: first duty, a subsequent duty, RETIRED as the first duty, RETIRED after other duties, backdated duty, unknown person. | ⬜ |
+| T09 | Create an xUnit test project with in-memory SQLite (a real provider, so the Dapper SQL runs) and coverlet for coverage. Run from `tech_exercise/package/exercise1/`: `dotnet test Stargate.sln`; one criterion: `--filter "AC=RULE-1"`; coverage: `--collect:"XPlat Code Coverage"`, then `dotnet reportgenerator -reports:"tests/StargateAPI.Tests/TestResults/*/coverage.cobertura.xml" -targetdir:coverage -reporttypes:Html`. → D8, D11 | ✅ `19aac51` |
+| T10 | Tests for `CreateAstronautDutyHandler`: first duty, a subsequent duty, RETIRED as the first duty, RETIRED after other duties, backdated duty, unknown person. Tests for behaviour not built yet are skipped with `Skip = "Pending Tnn …"`; the fixing task removes the skip first. → D12 | ✅ |
 | T11 | Tests for the pre-processors (person and duty) and for the queries (found and not found). | ⬜ |
 | T12 | Reach >50% coverage. Record the number here: `__%`. | ⬜ |
 
@@ -180,6 +180,7 @@ Each entry records a choice, why it was made, and what was rejected. The exercis
 | D9 | How is `dotnet-ef` installed? | **Local tool manifest** at the repo root, pinned to 8.x. | Versioned in the repo; anyone gets it with `dotnet tool restore`. A global install only works on one machine. | T04 |
 | D10 | `CareerStartDate`: the model says NOT NULL, the database says nullable — which wins? | **NOT NULL**, via a new migration. | Every astronaut has a career start date, so the database should enforce it. Making the property nullable would allow a state that should be impossible. `InitialCreate` isn't edited because it has already been applied. | T05 |
 | D11 | How is the test project set up? | **`tests/StargateAPI.Tests`** next to `api/`, plus `Stargate.sln`. Tests send requests **through the real MediatR pipeline** (pre-processors included), registered by the same `AddStargateMediatR()` the API uses, against an **in-memory SQLite database built by the real migrations**, one per test. xUnit's built-in `Assert`. Coverage with coverlet plus **ReportGenerator** (local tool), excluding generated migrations. Names: `Method_Scenario_ExpectedResult`. HTTP-level tests (`WebApplicationFactory`) come later, for status codes (T16, T21). | Testing through the pipeline checks a rule's validation and its handler together, and catches a missing registration (the T08 bug), which calling handlers directly would miss. Sharing one registration method stops tests and API drifting apart. Running the real migrations tests the actual schema (`NOCASE`, unique index, NOT NULL). Rejected: *calling handlers directly* (two tests per rule; misses registration bugs); *only HTTP tests* (slower; more integration than unit testing); *`EnsureCreated()`* (skips the migrations); *FluentAssertions* (v8+ needs a commercial licence); *coverage without a report* (nothing to show for SPEC-4). | T09–T12 |
+| D12 | Tests written before their fix fail. Commit them failing, or skip them? | **Skip with a reason naming the fixing task**, e.g. `[Fact(Skip = "Pending T14 (D1): …")]`. The fixing task first removes the skip, sees the test fail, then makes it pass. | Keeps `dotnet test` green, so a new, unexpected failure stands out, and every run lists the remaining work as "Skipped" with reasons. Rejected: *commit them failing* (the suite stays red, so "all tests pass" stops meaning anything during review); *custom "pending" traits and filters* (a new mechanism; tracking is kept minimal). | T10, T14, T15, T17 |
 
 ## Log
 
