@@ -38,7 +38,7 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 
 | ID | Spec (verbatim) | Acceptance criterion (our interpretation) | Tasks / decisions | Tests | Status |
 |----|-----------------|-------------------------------------------|-------------------|-------|--------|
-| RULE-1 | A Person is uniquely identified by their Name. | A person is uniquely identified by name: *creating a person whose name already exists is rejected, and the database enforces uniqueness.* | T08, T11, T18, D4 | — | ❌ duplicates accepted |
+| RULE-1 | A Person is uniquely identified by their Name. | A person is uniquely identified by name: *creating a person whose name already exists is rejected, and the database enforces uniqueness.* | T08, T11, T18, D4 | — | 🟡 untested; duplicates rejected, but as 500 rather than 400 (T21); names not yet trimmed (T18) |
 | RULE-2 | A Person who has not had an astronaut assignment will not have Astronaut records. | A person with no astronaut assignment has no `AstronautDetail` and no `AstronautDuty` rows; *the API returns null astronaut fields for them.* | T10, T23 | — | 🟡 untested; rank and title come back as `""`, not null |
 | RULE-3 | A Person will only ever hold one current Astronaut Duty Title, Start Date, and Rank at a time. | A person has at most one current duty (title, start date, rank), *and `AstronautDetail` always reflects it (spec Definitions #2).* | T10, T14, T20 | — | 🟡 a backdated duty becomes "current" |
 | RULE-4 | A Person's Current Duty will not have a Duty End Date. | The current duty has no `DutyEndDate`; *every other duty has one (inferred from RULE-5).* | T10, T14 | — | 🟡 breaks with backdating |
@@ -52,7 +52,7 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 |----|-----------------|-------------------------------------------|-------------------|-------|--------|
 | API-1 | Retrieve a person by name. | Retrieve a person by name, *safe for any name; an unknown name returns 404 (D3).* | T07, T11, T16, T21, D3 | — | 🟡 untested; unknown name → 200 with null (T16) |
 | API-2 | Retrieve all people. | Retrieve all people. | T11 | — | 🟡 works, untested |
-| API-3 | Add/update a person by name. | Add or update a person by name. | T08, T11, T25 | — | ❌ no update; duplicates accepted |
+| API-3 | Add/update a person by name. | Add or update a person by name. | T08, T11, T25 | — | ❌ no update (T25); duplicates rejected as 500 (T21) |
 | API-4 | Retrieve Astronaut Duty by name. | Retrieve *all of* a person's astronaut duties by name. *An unknown name returns 404; a known person with no astronaut records returns 200 with null astronaut fields and an empty duties list (D3).* | T06, T07, T11, T16, T21, T38 | — | 🟡 returns duties; unknown name → 500 (T16) |
 | API-5 | Add an Astronaut Duty. | Add an astronaut duty, *applying RULE-3 to RULE-7.* | T07, T10, T13–T15, T19–T21 | — | 🟡 rule violations above |
 
@@ -93,8 +93,8 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 | ID | Task | Status |
 |----|------|--------|
 | T06 | `GET /AstronautDuty/{name}` sends `GetPersonByName`; it should send `GetAstronautDutiesByName` (`Controllers/AstronautDutyController.cs:24`). | ✅ `7f7a960` |
-| T07 | **Security:** remove the SQL built by string interpolation. Parameterize the Dapper queries in the query handlers (`GetPersonByName.cs:26`, `GetAstronautDutiesByName.cs:28,34`), and move `CreateAstronautDutyHandler`'s Dapper reads (`CreateAstronautDuty.cs:56,60,90`) to EF, so commands use only EF. → D6. Repro: `GET /Person/' OR 1=1 --` returns a person; `GET /Person/O'Brien` returns a 500. | ✅ |
-| T08 | Reject duplicate names: register `CreatePersonPreProcessor` (missing from `Program.cs:18`), and make `Person.Name` `COLLATE NOCASE` with a unique index (one migration). → D4 | ⬜ |
+| T07 | **Security:** remove the SQL built by string interpolation. Parameterize the Dapper queries in the query handlers (`GetPersonByName.cs:26`, `GetAstronautDutiesByName.cs:28,34`), and move `CreateAstronautDutyHandler`'s Dapper reads (`CreateAstronautDuty.cs:56,60,90`) to EF, so commands use only EF. → D6. Repro: `GET /Person/' OR 1=1 --` returns a person; `GET /Person/O'Brien` returns a 500. | ✅ `9d16290` |
+| T08 | Reject duplicate names: register `CreatePersonPreProcessor` (missing from `Program.cs:18`), and make `Person.Name` `COLLATE NOCASE` with a unique index (one migration). → D4 | ✅ |
 
 ### Phase 2 — Tests (written before the rule fixes)
 
