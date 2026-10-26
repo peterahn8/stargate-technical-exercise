@@ -91,6 +91,11 @@ namespace StargateAPI.Business.Commands
                 {
                     astronautDetail.CareerEndDate = request.DutyStartDate.AddDays(-1).Date;
                 }
+                else
+                {
+                    // A non-RETIRED duty means active service, so a retired person returns to service (D2).
+                    astronautDetail.CareerEndDate = null;
+                }
             }
 
             var astronautDuty = await _context.AstronautDuties

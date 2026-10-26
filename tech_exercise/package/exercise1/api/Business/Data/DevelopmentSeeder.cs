@@ -52,7 +52,26 @@ namespace StargateAPI.Business.Data
                 }
             };
 
-            context.People.AddRange(jane, john, jack);
+            // Returned to service after retiring: the RETIRED duty ended the day before the new duty, and
+            // the career end date was cleared (D2). The career start date is the original one.
+            var george = new Person
+            {
+                Name = "George Hammond",
+                AstronautDetail = new AstronautDetail
+                {
+                    CurrentRank = "MG",
+                    CurrentDutyTitle = "Commander",
+                    CareerStartDate = new DateTime(2005, 1, 1)
+                },
+                AstronautDuties =
+                {
+                    new AstronautDuty { Rank = "COL", DutyTitle = "Commander", DutyStartDate = new DateTime(2005, 1, 1), DutyEndDate = new DateTime(2012, 12, 31) },
+                    new AstronautDuty { Rank = "COL", DutyTitle = "RETIRED", DutyStartDate = new DateTime(2013, 1, 1), DutyEndDate = new DateTime(2016, 5, 31) },
+                    new AstronautDuty { Rank = "MG", DutyTitle = "Commander", DutyStartDate = new DateTime(2016, 6, 1) }
+                }
+            };
+
+            context.People.AddRange(jane, john, jack, george);
             context.SaveChanges();
         }
     }

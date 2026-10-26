@@ -126,7 +126,7 @@ namespace StargateAPI.Tests
             Assert.Equal(2, Duties().Count);
         }
 
-        [Fact(Skip = "Pending T17 (D2): CareerEndDate isn't cleared on return to service")]
+        [Fact]
         [Trait("AC", "RULE-6")]
         [Trait("AC", "RULE-7")]
         public async Task CreateAstronautDuty_DutyAfterRetirement_ReturnsToService()
