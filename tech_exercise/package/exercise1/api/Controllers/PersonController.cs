@@ -67,5 +67,28 @@ namespace StargateAPI.Controllers
             return this.GetResponse(result);
 
         }
+
+        /// <summary>Renames a person. Their duties and astronaut details are kept.</summary>
+        /// <param name="name">The person's current name, ignoring case and surrounding spaces.</param>
+        /// <param name="newName">The new name, as a JSON string, e.g. <c>"Jonathan Doe"</c>. A change of case only is allowed.</param>
+        /// <response code="200">The person was renamed (or already had that name); returns their id.</response>
+        /// <response code="400">The new name is blank.</response>
+        /// <response code="404">No person has that name.</response>
+        /// <response code="409">Another person already has the new name.</response>
+        [HttpPut("{name}")]
+        [ProducesResponseType(typeof(UpdatePersonResult), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status409Conflict)]
+        public async Task<IActionResult> UpdatePerson(string name, [FromBody] string newName)
+        {
+            var result = await _mediator.Send(new UpdatePerson()
+            {
+                Name = name,
+                NewName = newName
+            });
+
+            return this.GetResponse(result);
+        }
     }
 }

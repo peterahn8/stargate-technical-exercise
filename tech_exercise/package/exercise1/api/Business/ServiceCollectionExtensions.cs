@@ -13,6 +13,7 @@ namespace StargateAPI.Business
             return services.AddMediatR(cfg =>
             {
                 cfg.AddRequestPreProcessor<CreatePersonPreProcessor>();
+                cfg.AddRequestPreProcessor<UpdatePersonPreProcessor>();
                 cfg.AddRequestPreProcessor<CreateAstronautDutyPreProcessor>();
                 cfg.RegisterServicesFromAssemblies(typeof(ServiceCollectionExtensions).Assembly);
             });
