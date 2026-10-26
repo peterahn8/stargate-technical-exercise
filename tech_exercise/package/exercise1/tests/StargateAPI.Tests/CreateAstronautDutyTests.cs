@@ -97,7 +97,7 @@ namespace StargateAPI.Tests
             Assert.Equal(new DateTime(2023, 12, 31), detail.CareerEndDate);
         }
 
-        [Fact(Skip = "Pending T15 (D2): RETIRED as a first duty is accepted")]
+        [Fact]
         [Trait("AC", "RULE-7")]
         public async Task CreateAstronautDuty_RetiredAsFirstDuty_IsRejected()
         {
@@ -110,7 +110,7 @@ namespace StargateAPI.Tests
             Assert.Empty(Duties());
         }
 
-        [Fact(Skip = "Pending T15 (D2): a second RETIRED is accepted")]
+        [Fact]
         [Trait("AC", "RULE-6")]
         [Trait("AC", "RULE-7")]
         public async Task CreateAstronautDuty_RetiredWhenAlreadyRetired_IsRejected()

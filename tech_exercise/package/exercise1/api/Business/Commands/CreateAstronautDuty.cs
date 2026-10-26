@@ -43,6 +43,16 @@ namespace StargateAPI.Business.Commands
             if (currentDuty is not null && request.DutyStartDate.Date <= currentDuty.DutyStartDate)
                 throw new BadHttpRequestException($"A new duty must start after the current duty's start date ({currentDuty.DutyStartDate:yyyy-MM-dd}).");
 
+            // You can only retire from active service (D2).
+            if (DutyTitles.IsRetired(request.DutyTitle))
+            {
+                if (currentDuty is null)
+                    throw new BadHttpRequestException("RETIRED can't be a person's first duty.");
+
+                if (DutyTitles.IsRetired(currentDuty.DutyTitle))
+                    throw new BadHttpRequestException("The person is already retired.");
+            }
+
             return Task.CompletedTask;
         }
     }
@@ -69,10 +79,6 @@ namespace StargateAPI.Business.Commands
                 astronautDetail.CurrentDutyTitle = request.DutyTitle;
                 astronautDetail.CurrentRank = request.Rank;
                 astronautDetail.CareerStartDate = request.DutyStartDate.Date;
-                if (request.DutyTitle == "RETIRED")
-                {
-                    astronautDetail.CareerEndDate = request.DutyStartDate.Date;
-                }
 
                 await _context.AstronautDetails.AddAsync(astronautDetail);
 
@@ -81,7 +87,7 @@ namespace StargateAPI.Business.Commands
             {
                 astronautDetail.CurrentDutyTitle = request.DutyTitle;
                 astronautDetail.CurrentRank = request.Rank;
-                if (request.DutyTitle == "RETIRED")
+                if (DutyTitles.IsRetired(request.DutyTitle))
                 {
                     astronautDetail.CareerEndDate = request.DutyStartDate.AddDays(-1).Date;
                 }
