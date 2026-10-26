@@ -15,7 +15,7 @@ import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { apiErrorInterceptor } from '../../core/api/api-error';
 import { PersonAstronaut } from '../../core/api/models';
-import { RecentActivity } from '../activity/recent-activity';
+import { ProcessLogService } from '../../core/api/process-log.service';
 import { PeopleList } from './people-list';
 
 function person(
@@ -41,21 +41,14 @@ class PersonPage {}
 
 const routes = [{ path: 'people/:name', component: PersonPage }];
 
-/** Stands in for the activity panel (tested in recent-activity.spec.ts), counting refreshes. */
-@Component({ selector: 'app-recent-activity', template: '' })
-class ActivityPanel {
-  reloads = 0;
+/** Stands in for the activity feed's data (the panel itself is tested in recent-activity.spec.ts). */
+class FakeProcessLog {
+  requests = 0;
 
-  reload(): void {
-    this.reloads++;
+  getRecent() {
+    this.requests++;
+    return of([]);
   }
-}
-
-function withActivityStub(): void {
-  TestBed.overrideComponent(PeopleList, {
-    remove: { imports: [RecentActivity] },
-    add: { imports: [ActivityPanel] },
-  });
 }
 
 const people: PersonAstronaut[] = [
@@ -66,20 +59,22 @@ const people: PersonAstronaut[] = [
 ];
 
 describe('[UI-1] PeopleList', () => {
+  let processLog: FakeProcessLog;
   let fixture: ComponentFixture<PeopleList>;
   let http: HttpTestingController;
   let loader: HarnessLoader;
 
   beforeEach(async () => {
+    processLog = new FakeProcessLog();
     TestBed.configureTestingModule({
       imports: [PeopleList],
       providers: [
         provideHttpClient(withInterceptors([apiErrorInterceptor])),
         provideHttpClientTesting(),
         provideRouter(routes),
+        { provide: ProcessLogService, useValue: processLog },
       ],
     });
-    withActivityStub();
     fixture = TestBed.createComponent(PeopleList);
     http = TestBed.inject(HttpTestingController);
     loader = TestbedHarnessEnvironment.loader(fixture);
@@ -203,18 +198,21 @@ describe('[UI-1] PeopleList', () => {
 });
 
 describe('[UI-3] PeopleList progress and results', () => {
+  let processLog: FakeProcessLog;
   let fixture: ComponentFixture<PeopleList>;
   let http: HttpTestingController;
   let dialogResult: string | undefined;
 
   beforeEach(async () => {
     dialogResult = 'Samantha Carter';
+    processLog = new FakeProcessLog();
     TestBed.configureTestingModule({
       imports: [PeopleList],
       providers: [
         provideHttpClient(withInterceptors([apiErrorInterceptor])),
         provideHttpClientTesting(),
         provideRouter(routes),
+        { provide: ProcessLogService, useValue: processLog },
         { provide: MATERIAL_ANIMATIONS, useValue: { animationsDisabled: true } },
         // The add-person dialog itself is tested in dialogs.spec.ts; here it just adds Samantha.
         {
@@ -223,7 +221,6 @@ describe('[UI-3] PeopleList progress and results', () => {
         },
       ],
     });
-    withActivityStub();
     fixture = TestBed.createComponent(PeopleList);
     http = TestBed.inject(HttpTestingController);
     TestBed.tick(); // Starts the first load; see above.
@@ -288,10 +285,8 @@ describe('[UI-3] PeopleList progress and results', () => {
     http.expectOne('/api/Person').flush({ people, success: true });
     await fixture.whenStable();
 
-    const panel = fixture.debugElement.query(
-      (node) => node.componentInstance instanceof ActivityPanel,
-    );
-    expect((panel.componentInstance as ActivityPanel).reloads).toBe(1);
+    // Once for the first load, once more after adding.
+    expect(processLog.requests).toBe(2);
   });
 
   it('changes nothing when the dialog is cancelled', async () => {

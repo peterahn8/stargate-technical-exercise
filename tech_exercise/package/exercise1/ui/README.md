@@ -1,59 +1,37 @@
-# StargateUi
+# Stargate UI
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.4.
+The Angular 22 front end for the Stargate API. For running the whole app, see the [root README](../../../../README.md).
 
-## Development server
+## Commands
 
-To start a local development server, run:
+| What | Command |
+|------|---------|
+| Run (needs the API on port 5204) | `npm start`, then open http://localhost:4200 |
+| Production build | `npx ng build` |
+| Tests | `npx ng test --watch=false` |
+| Tests for one criterion | `npx ng test --watch=false --filter "\[UI-2\]"` |
+| Coverage | `npx ng test --watch=false --coverage` (report in `coverage/`) |
 
-```bash
-ng serve
+## Structure
+
+```
+src/app/
+  core/
+    api/                  typed services for each API area, the models, and the error interceptor
+    astronaut-status.ts   Active / Retired / Not an astronaut, and the one RETIRED check
+    duration.ts           "2 years, 5 months"
+    validators.ts         form rules that mirror the API's, with its wording
+  features/
+    people/               the people list, person page, duty timeline and dialogs
+    activity/             the recent-activity feed
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+- **Talking to the API:** every call goes to `/api/...`. `src/proxy.conf.json` forwards it to the API and removes the prefix. `apiErrorInterceptor` turns every failure into an `ApiError` carrying the API's own message, so pages can show it as-is.
+- **State:** signals, with `rxResource` for loading data. Each page is lazy-loaded.
+- **Design:** Angular Material with its Material 3 theme. The pages also work at phone width.
 
-## Code scaffolding
+## Test conventions
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- Vitest, through Angular's test runner. Each top-level `describe` starts with the rubric criterion it proves, e.g. `describe('[UI-2] PersonDetail', …)`, so `--filter` can select one criterion.
+- HTTP calls go to Angular's fake backend (`HttpTestingController`). An unanswered request counts as pending work, so a test must answer it before waiting for the app to settle (`whenStable()`). Start loads with `TestBed.tick()`.
+- Material components are driven through their test harnesses where possible. The dialog tests open each dialog for real, with Material's animations switched off. The page tests replace the dialog service and the activity feed's data with stand-ins, so they test only the page.

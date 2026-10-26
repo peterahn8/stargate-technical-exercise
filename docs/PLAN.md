@@ -73,7 +73,7 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 | SPEC-1 | Generate the database — This is your source and storage location | The SQLite database is generated from the EF migrations, *automatically at startup in Development; the file itself isn't committed (D7).* | T02–T05, T39, D7 | `AC=SPEC-1` · 6 | ✅ |
 | SPEC-2 | Enforce the rules | Every `RULE-n` row is ✅. | see RULE-1…7 | — | ✅ |
 | SPEC-3 | Improve defensive coding | *Untrusted input is validated or parameterized; failures return a consistent error contract (400/404/500) without leaking internals; the build has no nullable warnings.* | T07, T19, T21–T23 | `AC=SPEC-3` · 11 | ✅ |
-| SPEC-4 | Add unit tests — identify the most impactful methods requiring tests; reach >50% code coverage | The business logic (duty handler, pre-processors, queries) is tested first; line coverage is >50%, measured with coverlet; *each test is tagged with the criteria it proves (D8).* | T09–T12, D8 | coverage 63.1% line (T12); all 34 tests tagged | ✅ |
+| SPEC-4 | Add unit tests — identify the most impactful methods requiring tests; reach >50% code coverage | The business logic (duty handler, pre-processors, queries) is tested first; line coverage is >50%, measured with coverlet; *each test is tagged with the criteria it proves (D8).* | T09–T12, D8 | API 100% and UI 99.4% line coverage (T36); every test tagged | ✅ |
 | SPEC-5 | Implement process logging — Log exceptions; Log successes; Store the logs in the database | Every request's success or exception is written to a database table; *a failed request's log entry survives the rollback of its transaction.* | T27–T29 | `AC=SPEC-5` · 12 | ✅ |
 
 ---
@@ -162,8 +162,8 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 
 | ID | Task | Status |
 |----|------|--------|
-| T39 | Test `DevelopmentSeeder`: the seeded data follows the rules (one current duty per astronaut, each previous duty ends the day before the next starts, career end the day before RETIRED), and a second run adds nothing. Tag `AC=SPEC-1`. Also tests that starting in Development creates and seeds the database. Backend line coverage is now **100%** (244 of 244 coverable lines; generated migrations excluded). | ✅ |
-| T36 | Update the README with run instructions (API, database, UI, tests) and a summary of the changes. Make it clear that the UI needs the API running in a second terminal (no combined start script). | ⬜ |
+| T39 | Test `DevelopmentSeeder`: the seeded data follows the rules (one current duty per astronaut, each previous duty ends the day before the next starts, career end the day before RETIRED), and a second run adds nothing. Tag `AC=SPEC-1`. Also tests that starting in Development creates and seeds the database. Backend line coverage is now **100%** (244 of 244 coverable lines; generated migrations excluded). | ✅ `42bd0f6` |
+| T36 | Update the README with run instructions (API, database, UI, tests) and a summary of the changes. Make it clear that the UI needs the API running in a second terminal (no combined start script). Done: a new root `README.md` (run, test and coverage commands, architecture, endpoints, and a summary of what changed and why), and a specific `ui/README.md` in place of Angular's generated one. BAM's `exercise1/README.md` is unchanged. Final figures (2026-10-26): **95 API tests, 100% of lines; 83 UI tests, 99.4% of lines.** | ✅ |
 
 ---
 
