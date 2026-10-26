@@ -53,7 +53,7 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 | API-1 | Retrieve a person by name. | Retrieve a person by name, *safe for any name; an unknown name returns 404 (D3).* | T07, T11, T16, T21, D3 | — | 🟡 SQL injection; `O'Brien` → 500 |
 | API-2 | Retrieve all people. | Retrieve all people. | T11 | — | 🟡 works, untested |
 | API-3 | Add/update a person by name. | Add or update a person by name. | T08, T11, T25 | — | ❌ no update; duplicates accepted |
-| API-4 | Retrieve Astronaut Duty by name. | Retrieve *all of* a person's astronaut duties by name. *An unknown name returns 404; a known person with no astronaut records returns 200 with null astronaut fields and an empty duties list (D3).* | T06, T07, T11, T16, T21 | — | ❌ returns the person, not duties |
+| API-4 | Retrieve Astronaut Duty by name. | Retrieve *all of* a person's astronaut duties by name. *An unknown name returns 404; a known person with no astronaut records returns 200 with null astronaut fields and an empty duties list (D3).* | T06, T07, T11, T16, T21, T38 | — | 🟡 returns duties; unknown name → 500 (T16) |
 | API-5 | Add an Astronaut Duty. | Add an astronaut duty, *applying RULE-3 to RULE-7.* | T07, T10, T13–T15, T19–T21 | — | 🟡 rule violations above |
 
 ### UI requirements
@@ -84,7 +84,7 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 |----|------|--------|
 | T01 | Add `.gitignore` at the repo root (dotnet, node, coverage, SQLite, OS). Untrack the committed `bin/`, `obj/` and `tech_exercise_v.0.0.4.tgz`. Keep the shared `.idea/` files; Rider's own `.idea/.gitignore` already excludes `workspace.xml`. | ✅ `7819070` |
 | T02 | Apply EF migrations at startup, in Development only (`Database.Migrate()`), so a fresh clone needs only `dotnet run`. *(Spec task 1)* → D7 | ✅ `aa69c89` |
-| T03 | Dev-only seeder: runs after the migration, only when the database is empty, using fixed dates. The data covers a non-astronaut, an active astronaut with history and a retiree. Remove the commented-out `SeedData()` (`StargateContext.cs:22`). → D5 | ✅ |
+| T03 | Dev-only seeder: runs after the migration, only when the database is empty, using fixed dates. The data covers a non-astronaut, an active astronaut with history and a retiree. Remove the commented-out `SeedData()` (`StargateContext.cs:22`). → D5 | ✅ `1ba7350` |
 | T04 | Add a local tool manifest at the repo root (`.config/dotnet-tools.json`) pinning `dotnet-ef` 8.x; contributors run `dotnet tool restore`. → D9 | ✅ `0758c3e` |
 | T05 | Make `AstronautDetail.CareerStartDate` NOT NULL in the database, via a new migration (don't edit `InitialCreate`). → D10 | ✅ `ab5f7e9` |
 
@@ -92,7 +92,7 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 
 | ID | Task | Status |
 |----|------|--------|
-| T06 | `GET /AstronautDuty/{name}` sends `GetPersonByName`; it should send `GetAstronautDutiesByName` (`Controllers/AstronautDutyController.cs:24`). | ⬜ |
+| T06 | `GET /AstronautDuty/{name}` sends `GetPersonByName`; it should send `GetAstronautDutiesByName` (`Controllers/AstronautDutyController.cs:24`). | ✅ |
 | T07 | **Security:** remove the SQL built by string interpolation. Parameterize the Dapper queries in the query handlers (`GetPersonByName.cs:26`, `GetAstronautDutiesByName.cs:28,34`), and move `CreateAstronautDutyHandler`'s Dapper reads (`CreateAstronautDuty.cs:56,60,90`) to EF, so commands use only EF. → D6. Repro: `GET /Person/' OR 1=1 --` returns a person; `GET /Person/O'Brien` returns a 500. | ⬜ |
 | T08 | Reject duplicate names: register `CreatePersonPreProcessor` (missing from `Program.cs:18`), and make `Person.Name` `COLLATE NOCASE` with a unique index (one migration). → D4 | ⬜ |
 
@@ -126,6 +126,7 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 | T22 | Make the pre-processors async (they currently call EF synchronously). | ⬜ |
 | T23 | Resolve the 12 nullable warnings (the `Person` navigation properties, the possibly-null `person` dereferences). Make `PersonAstronaut.CurrentRank` and `CurrentDutyTitle` `string?`, so a non-astronaut gets `null` rather than `""` (RULE-2). | ⬜ |
 | T24 | Add `ProducesResponseType` attributes and XML comments for Swagger. | ⬜ |
+| T38 | Return duties as an `AstronautDutyDto` (matching how `PersonAstronaut` works for people) rather than the `AstronautDuty` EF entity, which leaks its `Person` link as `"person": null` and ties the API's response shape to the database entity (`GetAstronautDutiesByName.cs:48`). | ⬜ |
 
 ### Phase 5 — Requirements gaps
 
