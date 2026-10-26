@@ -47,17 +47,66 @@ Coverage on 2026-10-26: **API 100% of lines** (EF's generated migrations exclude
 
 ## How it's built
 
-```
-Browser ── Angular 22 UI ──/api──▶ ASP.NET Core 8 API ──▶ MediatR pipeline ──▶ SQLite
-                                   (thin controllers)      process logging
-                                                           → validation (pre-processors)
-                                                           → handlers: queries use Dapper,
-                                                             commands use EF Core
+```mermaid
+flowchart TB
+    ui["Angular 22 UI<br/>ng serve :4200"]
+
+    subgraph api["ASP.NET Core 8 API :5204"]
+        controllers[Thin controllers] --> mediatr[MediatR]
+        subgraph pipeline[Request pipeline]
+            logging[Process logging] --> validation["Pre-processors<br/>(validation)"] --> handlers[Handlers]
+        end
+        mediatr --> logging
+        errors["ApiExceptionHandler<br/>one error shape"]
+    end
+
+    db[("SQLite<br/>starbase.db")]
+
+    ui -- "/api/* (proxy removes /api)" --> controllers
+    pipeline -. "exceptions" .-> errors
+    errors -. "400 / 404 / 409 / 500" .-> ui
+    handlers -- "queries: Dapper<br/>commands: EF Core" --> db
+    logging -- "ProcessLog,<br/>via a fresh context" --> db
 ```
 
 - **API** (`api/`): controllers only forward to MediatR. Each use case is a request with a pre-processor that validates it and a handler. Queries read with parameterised Dapper SQL and commands write with EF Core. One exception handler turns every failure into the same response shape the successes use (`success`, `message`, `responseCode`). Every request that reaches the pipeline is written to a `ProcessLog` table, successes and failures alike. Reading the log itself isn't logged, and neither is malformed JSON, which ASP.NET rejects before the pipeline runs.
 - **Tests** (`tests/`): xUnit through the real MediatR pipeline, on an in-memory SQLite database built by the real migrations, plus HTTP tests of the whole app. Each test is tagged with the rubric criterion it proves.
 - **UI** (`ui/`): Angular 22 with standalone components, signals and no zone.js, plus Angular Material. See [`ui/README.md`](tech_exercise/package/exercise1/ui/README.md).
+
+### Data model
+
+The database enforces the key rules itself: names are unique ignoring case, and a person can have at most one current duty (a duty with no end date).
+
+```mermaid
+erDiagram
+    Person ||--o| AstronautDetail : "current details"
+    Person ||--o{ AstronautDuty : "duty history"
+    Person {
+        int Id PK
+        string Name UK "unique, ignoring case (RULE-1)"
+    }
+    AstronautDetail {
+        int PersonId FK "one per person"
+        string CurrentRank
+        string CurrentDutyTitle
+        date CareerStartDate
+        date CareerEndDate "set while retired (RULE-7)"
+    }
+    AstronautDuty {
+        int PersonId FK "at most one with no end date (RULE-3)"
+        string Rank
+        string DutyTitle
+        date DutyStartDate
+        date DutyEndDate "day before the next duty starts (RULE-5)"
+    }
+    ProcessLog {
+        datetime Timestamp
+        string RequestType
+        string Outcome
+        string Level
+        string Message
+    }
+```
 
 ### Endpoints
 

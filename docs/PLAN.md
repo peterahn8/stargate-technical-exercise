@@ -163,7 +163,8 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 | ID | Task | Status |
 |----|------|--------|
 | T39 | Test `DevelopmentSeeder`: the seeded data follows the rules (one current duty per astronaut, each previous duty ends the day before the next starts, career end the day before RETIRED), and a second run adds nothing. Tag `AC=SPEC-1`. Also tests that starting in Development creates and seeds the database. Backend line coverage is now **100%** (244 of 244 coverable lines; generated migrations excluded). | ✅ `42bd0f6` |
-| T36 | Update the README with run instructions (API, database, UI, tests) and a summary of the changes. Make it clear that the UI needs the API running in a second terminal (no combined start script). Done: a new root `README.md` (run, test and coverage commands, architecture, endpoints, and a summary of what changed and why), and a specific `ui/README.md` in place of Angular's generated one. BAM's `exercise1/README.md` is unchanged. Final figures (2026-10-26): **95 API tests, 100% of lines; 83 UI tests, 99.4% of lines.** | ✅ |
+| T36 | Update the README with run instructions (API, database, UI, tests) and a summary of the changes. Make it clear that the UI needs the API running in a second terminal (no combined start script). Done: a new root `README.md` (run, test and coverage commands, architecture, endpoints, and a summary of what changed and why), and a specific `ui/README.md` in place of Angular's generated one. BAM's `exercise1/README.md` is unchanged. Final figures (2026-10-26): **95 API tests, 100% of lines; 83 UI tests, 99.4% of lines.** | ✅ `069a376` |
+| T42 | Add Mermaid diagrams to the README: an architecture overview (UI → API → request pipeline → SQLite, including the error path) in place of the plain-text sketch, and a data model showing the constraints behind RULE-1, 3, 5 and 7. Both were checked with `@mermaid-js/mermaid-cli`, rendered straight from the README. | ✅ |
 
 ---
 
