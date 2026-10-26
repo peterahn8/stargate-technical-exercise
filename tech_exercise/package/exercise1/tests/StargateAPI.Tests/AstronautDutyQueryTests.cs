@@ -75,6 +75,18 @@ namespace StargateAPI.Tests
 
         [Fact]
         [Trait("AC", "API-4")]
+        public async Task GetAstronautDutiesByName_NameWithSurroundingSpaces_FindsDuties()
+        {
+            await _host.CreatePerson("John Doe");
+            await _host.AddDuty("John Doe", "CPT", "Commander", new DateTime(2022, 1, 1));
+
+            var result = await _host.Send(new GetAstronautDutiesByName { Name = " John Doe  " });
+
+            Assert.Single(result.AstronautDuties);
+        }
+
+        [Fact]
+        [Trait("AC", "API-4")]
         public async Task GetAstronautDutiesByName_UnknownName_ReturnsNotFound()
         {
             var result = await _host.Send(new GetAstronautDutiesByName { Name = "Nobody" });

@@ -8,7 +8,10 @@ namespace StargateAPI.Business.Commands
 {
     public class CreatePerson : IRequest<CreatePersonResult>
     {
-        public required string Name { get; set; } = string.Empty;
+        // Incoming text is trimmed as it's set, so every caller gets clean input (D4).
+        private string _name = string.Empty;
+
+        public required string Name { get => _name; set => _name = value?.Trim() ?? string.Empty; }
     }
 
     public class CreatePersonPreProcessor : IRequestPreProcessor<CreatePerson>

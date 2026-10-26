@@ -79,6 +79,17 @@ namespace StargateAPI.Tests
 
         [Fact]
         [Trait("AC", "API-1")]
+        public async Task GetPersonByName_NameWithSurroundingSpaces_FindsPerson()
+        {
+            await _host.CreatePerson("John Doe");
+
+            var result = await _host.Send(new GetPersonByName { Name = "  John Doe " });
+
+            Assert.Equal("John Doe", result.Person?.Name);
+        }
+
+        [Fact]
+        [Trait("AC", "API-1")]
         public async Task GetPersonByName_SqlInjectionAttempt_FindsNoOne()
         {
             await _host.CreatePerson("John Doe");

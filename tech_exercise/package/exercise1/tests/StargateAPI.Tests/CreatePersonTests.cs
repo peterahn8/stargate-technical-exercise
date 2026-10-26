@@ -35,6 +35,26 @@ namespace StargateAPI.Tests
 
         [Fact]
         [Trait("AC", "API-3")]
+        public async Task CreatePerson_NameWithSurroundingSpaces_IsStoredTrimmed()
+        {
+            await _host.CreatePerson("  Jane Doe  ");
+
+            Assert.Equal("Jane Doe", _host.Db(db => db.People.Single().Name));
+        }
+
+        [Fact]
+        [Trait("AC", "RULE-1")]
+        public async Task CreatePerson_SameNameWithSurroundingSpaces_IsRejected()
+        {
+            await _host.CreatePerson("John Doe");
+
+            await Assert.ThrowsAsync<BadHttpRequestException>(() => _host.CreatePerson(" John Doe "));
+
+            Assert.Equal(1, _host.Db(db => db.People.Count()));
+        }
+
+        [Fact]
+        [Trait("AC", "API-3")]
         public async Task CreatePerson_NameWithApostrophe_IsStored()
         {
             await _host.CreatePerson("Miles O'Brien");

@@ -182,6 +182,50 @@ namespace StargateAPI.Tests
             Assert.Empty(_host.Db(db => db.AstronautDuties.ToList()));
         }
 
+        [Fact]
+        [Trait("AC", "RULE-6")]
+        [Trait("AC", "RULE-7")]
+        public async Task CreateAstronautDuty_RetiredInMixedCase_RetiresAndKeepsTitleAsReceived()
+        {
+            await CreatePerson();
+            await AddDuty("CPT", "Commander", new DateTime(2015, 3, 1));
+
+            await AddDuty("CPT", "Retired", new DateTime(2024, 1, 1));
+
+            var detail = Detail()!;
+            Assert.Equal("Retired", detail.CurrentDutyTitle);
+            Assert.Equal(new DateTime(2023, 12, 31), detail.CareerEndDate);
+        }
+
+        [Fact]
+        [Trait("AC", "RULE-6")]
+        public async Task CreateAstronautDuty_LowercaseRetiredAsFirstDuty_IsRejected()
+        {
+            await CreatePerson();
+
+            await Assert.ThrowsAsync<BadHttpRequestException>(
+                () => AddDuty("CPT", "retired", new DateTime(2024, 1, 1)));
+
+            Assert.Null(Detail());
+        }
+
+        [Fact]
+        [Trait("AC", "API-5")]
+        public async Task CreateAstronautDuty_TextWithSurroundingSpaces_IsStoredTrimmed()
+        {
+            await CreatePerson();
+
+            await _host.Send(new CreateAstronautDuty
+            {
+                Name = "  John Doe  ", Rank = " CPT ", DutyTitle = " Commander ", DutyStartDate = new DateTime(2024, 1, 1)
+            });
+
+            var duty = Assert.Single(Duties());
+            Assert.Equal("CPT", duty.Rank);
+            Assert.Equal("Commander", duty.DutyTitle);
+            Assert.Equal("Commander", Detail()!.CurrentDutyTitle);
+        }
+
         private Task CreatePerson() => _host.Send(new CreatePerson { Name = Name });
 
         private Task<CreateAstronautDutyResult> AddDuty(string rank, string title, DateTime start) =>

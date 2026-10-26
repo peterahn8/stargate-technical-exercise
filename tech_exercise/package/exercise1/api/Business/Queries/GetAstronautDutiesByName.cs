@@ -9,7 +9,10 @@ namespace StargateAPI.Business.Queries
 {
     public class GetAstronautDutiesByName : IRequest<GetAstronautDutiesByNameResult>
     {
-        public string Name { get; set; } = string.Empty;
+        // Incoming text is trimmed as it's set, so every caller gets clean input (D4).
+        private string _name = string.Empty;
+
+        public string Name { get => _name; set => _name = value?.Trim() ?? string.Empty; }
     }
 
     public class GetAstronautDutiesByNameHandler : IRequestHandler<GetAstronautDutiesByName, GetAstronautDutiesByNameResult>

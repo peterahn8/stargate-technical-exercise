@@ -9,11 +9,16 @@ namespace StargateAPI.Business.Commands
 {
     public class CreateAstronautDuty : IRequest<CreateAstronautDutyResult>
     {
-        public required string Name { get; set; }
+        // Incoming text is trimmed as it's set, so every caller gets clean input (D4).
+        private string _name = string.Empty;
+        private string _rank = string.Empty;
+        private string _dutyTitle = string.Empty;
 
-        public required string Rank { get; set; }
+        public required string Name { get => _name; set => _name = value?.Trim() ?? string.Empty; }
 
-        public required string DutyTitle { get; set; }
+        public required string Rank { get => _rank; set => _rank = value?.Trim() ?? string.Empty; }
+
+        public required string DutyTitle { get => _dutyTitle; set => _dutyTitle = value?.Trim() ?? string.Empty; }
 
         public DateTime DutyStartDate { get; set; }
     }
