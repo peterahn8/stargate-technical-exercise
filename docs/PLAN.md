@@ -39,7 +39,7 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 | ID | Spec (verbatim) | Acceptance criterion (our interpretation) | Tasks / decisions | Tests | Status |
 |----|-----------------|-------------------------------------------|-------------------|-------|--------|
 | RULE-1 | A Person is uniquely identified by their Name. | A person is uniquely identified by name: *creating a person whose name already exists is rejected, and the database enforces uniqueness.* | T08, T11, T18, D4 | — | ❌ duplicates accepted |
-| RULE-2 | A Person who has not had an astronaut assignment will not have Astronaut records. | A person with no astronaut assignment has no `AstronautDetail` and no `AstronautDuty` rows; *the API returns null astronaut fields for them.* | T10 | — | 🟡 observed, untested |
+| RULE-2 | A Person who has not had an astronaut assignment will not have Astronaut records. | A person with no astronaut assignment has no `AstronautDetail` and no `AstronautDuty` rows; *the API returns null astronaut fields for them.* | T10, T23 | — | 🟡 untested; rank and title come back as `""`, not null |
 | RULE-3 | A Person will only ever hold one current Astronaut Duty Title, Start Date, and Rank at a time. | A person has at most one current duty (title, start date, rank), *and `AstronautDetail` always reflects it (spec Definitions #2).* | T10, T14, T20 | — | 🟡 a backdated duty becomes "current" |
 | RULE-4 | A Person's Current Duty will not have a Duty End Date. | The current duty has no `DutyEndDate`; *every other duty has one (inferred from RULE-5).* | T10, T14 | — | 🟡 breaks with backdating |
 | RULE-5 | A Person's Previous Duty End Date is set to the day before the New Astronaut Duty Start Date when a new Astronaut Duty is received for a Person. | When a new duty is received, the previous duty's `DutyEndDate` = new `DutyStartDate` − 1 day. *"Previous" means the current duty; a new duty must start strictly after it, otherwise it's rejected with 400 (D1).* | T10, T14, D1 | — | ❌ backdating yields end < start |
@@ -84,9 +84,9 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 |----|------|--------|
 | T01 | Add `.gitignore` at the repo root (dotnet, node, coverage, SQLite, OS). Untrack the committed `bin/`, `obj/` and `tech_exercise_v.0.0.4.tgz`. Keep the shared `.idea/` files; Rider's own `.idea/.gitignore` already excludes `workspace.xml`. | ✅ `7819070` |
 | T02 | Apply EF migrations at startup, in Development only (`Database.Migrate()`), so a fresh clone needs only `dotnet run`. *(Spec task 1)* → D7 | ✅ `aa69c89` |
-| T03 | Dev-only seeder: runs after the migration, only when the database is empty, using fixed dates. The data covers a non-astronaut, an active astronaut with history and a retiree. Remove the commented-out `SeedData()` (`StargateContext.cs:22`). → D5 | ⬜ |
+| T03 | Dev-only seeder: runs after the migration, only when the database is empty, using fixed dates. The data covers a non-astronaut, an active astronaut with history and a retiree. Remove the commented-out `SeedData()` (`StargateContext.cs:22`). → D5 | ✅ |
 | T04 | Add a local tool manifest at the repo root (`.config/dotnet-tools.json`) pinning `dotnet-ef` 8.x; contributors run `dotnet tool restore`. → D9 | ✅ `0758c3e` |
-| T05 | Make `AstronautDetail.CareerStartDate` NOT NULL in the database, via a new migration (don't edit `InitialCreate`). → D10 | ✅ |
+| T05 | Make `AstronautDetail.CareerStartDate` NOT NULL in the database, via a new migration (don't edit `InitialCreate`). → D10 | ✅ `ab5f7e9` |
 
 ### Phase 1 — Quick, high-impact bug fixes
 
@@ -124,7 +124,7 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 |----|------|--------|
 | T21 | Consistent error handling. `CreateAstronautDuty` has no try/catch and leaks stack traces; the other actions catch everything, return 500 and leak `ex.Message`. Replace with a global exception handler: validation → 400, anything unexpected → 500 with a generic message. (Not found is a result, not an exception; see D3.) | ⬜ |
 | T22 | Make the pre-processors async (they currently call EF synchronously). | ⬜ |
-| T23 | Resolve the 12 nullable warnings (the `Person` navigation properties, the possibly-null `person` dereferences). | ⬜ |
+| T23 | Resolve the 12 nullable warnings (the `Person` navigation properties, the possibly-null `person` dereferences). Make `PersonAstronaut.CurrentRank` and `CurrentDutyTitle` `string?`, so a non-astronaut gets `null` rather than `""` (RULE-2). | ⬜ |
 | T24 | Add `ProducesResponseType` attributes and XML comments for Swagger. | ⬜ |
 
 ### Phase 5 — Requirements gaps
