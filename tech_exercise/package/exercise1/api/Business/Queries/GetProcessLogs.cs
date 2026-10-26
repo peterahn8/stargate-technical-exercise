@@ -34,7 +34,12 @@ namespace StargateAPI.Business.Queries
             var logs = await _context.Connection.QueryAsync<ProcessLogEntry>(
                 query, new { Take = Math.Clamp(request.Take, 1, GetProcessLogs.MaxTake) });
 
-            return new GetProcessLogsResult { Logs = logs.ToList() };
+            // Timestamps are stored in UTC, but SQLite doesn't keep the kind. Marking them as UTC makes
+            // the JSON end in "Z", so browsers convert them to local time correctly.
+            var entries = logs.ToList();
+            entries.ForEach(log => log.Timestamp = DateTime.SpecifyKind(log.Timestamp, DateTimeKind.Utc));
+
+            return new GetProcessLogsResult { Logs = entries };
         }
     }
 

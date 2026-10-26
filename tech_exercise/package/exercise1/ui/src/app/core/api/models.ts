@@ -51,3 +51,20 @@ export interface NewDuty {
   /** ISO date, e.g. "2024-01-01". */
   dutyStartDate: string;
 }
+
+/** One processed request, as the activity feed shows it (T41). No exception details or payloads. */
+export interface ProcessLogEntry {
+  /** ISO date-time in UTC, ending in "Z". */
+  timestamp: string;
+  /** The API operation, e.g. "CreateAstronautDuty". */
+  requestType: string;
+  outcome: 'Success' | 'Failure';
+  level: 'Information' | 'Warning' | 'Error';
+  message: string;
+  durationMs: number;
+}
+
+export interface GetProcessLogsResult extends BaseResponse {
+  /** Newest first. */
+  logs: ProcessLogEntry[];
+}

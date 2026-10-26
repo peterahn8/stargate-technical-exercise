@@ -15,6 +15,7 @@ import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { apiErrorInterceptor } from '../../core/api/api-error';
 import { PersonAstronaut } from '../../core/api/models';
+import { RecentActivity } from '../activity/recent-activity';
 import { PeopleList } from './people-list';
 
 function person(
@@ -40,6 +41,23 @@ class PersonPage {}
 
 const routes = [{ path: 'people/:name', component: PersonPage }];
 
+/** Stands in for the activity panel (tested in recent-activity.spec.ts), counting refreshes. */
+@Component({ selector: 'app-recent-activity', template: '' })
+class ActivityPanel {
+  reloads = 0;
+
+  reload(): void {
+    this.reloads++;
+  }
+}
+
+function withActivityStub(): void {
+  TestBed.overrideComponent(PeopleList, {
+    remove: { imports: [RecentActivity] },
+    add: { imports: [ActivityPanel] },
+  });
+}
+
 const people: PersonAstronaut[] = [
   person('John Doe', 'CPT', 'Commander', '2018-01-15T00:00:00'),
   person('Jane Doe', null, null, null),
@@ -61,6 +79,7 @@ describe('[UI-1] PeopleList', () => {
         provideRouter(routes),
       ],
     });
+    withActivityStub();
     fixture = TestBed.createComponent(PeopleList);
     http = TestBed.inject(HttpTestingController);
     loader = TestbedHarnessEnvironment.loader(fixture);
@@ -204,6 +223,7 @@ describe('[UI-3] PeopleList progress and results', () => {
         },
       ],
     });
+    withActivityStub();
     fixture = TestBed.createComponent(PeopleList);
     http = TestBed.inject(HttpTestingController);
     TestBed.tick(); // Starts the first load; see above.
@@ -257,6 +277,21 @@ describe('[UI-3] PeopleList progress and results', () => {
     await fixture.whenStable();
 
     expect(TestBed.inject(Router).url).toBe('/people/Samantha%20Carter');
+  });
+
+  it('refreshes the activity feed after adding a person', async () => {
+    http.expectOne('/api/Person').flush({ people, success: true });
+    await fixture.whenStable();
+
+    element().querySelector<HTMLButtonElement>('.page-header button')!.click();
+    TestBed.tick();
+    http.expectOne('/api/Person').flush({ people, success: true });
+    await fixture.whenStable();
+
+    const panel = fixture.debugElement.query(
+      (node) => node.componentInstance instanceof ActivityPanel,
+    );
+    expect((panel.componentInstance as ActivityPanel).reloads).toBe(1);
   });
 
   it('changes nothing when the dialog is cancelled', async () => {

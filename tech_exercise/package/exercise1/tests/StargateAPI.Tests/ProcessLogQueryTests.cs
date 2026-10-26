@@ -66,6 +66,21 @@ namespace StargateAPI.Tests
                 entry.EnumerateObject().Select(p => p.Name));
         }
 
+        [Fact]
+        [Trait("AC", "UI-3")]
+        public async Task GetProcessLog_OverHttp_MarksTimestampsAsUtc()
+        {
+            using var factory = new ApiFactory();
+            using var client = factory.CreateClient();
+            (await client.PostAsJsonAsync("/Person", "John Doe")).EnsureSuccessStatusCode();
+
+            var body = await client.GetFromJsonAsync<JsonElement>("/ProcessLog");
+
+            // Stored as UTC, but SQLite doesn't keep the kind; without the Z, browsers read local time.
+            var timestamp = body.GetProperty("logs")[0].GetProperty("timestamp").GetString();
+            Assert.EndsWith("Z", timestamp);
+        }
+
         private void AddLogs(int count) => _host.Db(db =>
         {
             db.ProcessLogs.AddRange(Enumerable.Range(1, count).Select(i => new ProcessLog

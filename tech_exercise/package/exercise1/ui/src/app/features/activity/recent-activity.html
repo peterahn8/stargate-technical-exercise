@@ -1,0 +1,53 @@
+<section class="activity" aria-labelledby="activity-heading">
+  <div class="heading">
+    <h2 id="activity-heading">Recent activity</h2>
+    <button
+      mat-icon-button
+      type="button"
+      aria-label="Refresh activity"
+      [disabled]="logs.isLoading()"
+      (click)="reload()"
+    >
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </div>
+
+  <div class="progress">
+    @if (logs.isLoading()) {
+      <mat-progress-bar mode="indeterminate" aria-label="Loading activity" />
+    }
+  </div>
+
+  @if (errorMessage(); as message) {
+    <p class="error" role="alert">{{ message }}</p>
+  } @else if (entries().length === 0 && logs.isLoading()) {
+    <div aria-hidden="true">
+      @for (row of skeletonRows; track row) {
+        <span class="skeleton row"></span>
+      }
+    </div>
+  } @else if (entries().length === 0) {
+    <p class="empty">No activity yet.</p>
+  } @else {
+    <ol class="entries">
+      @for (entry of entries(); track $index) {
+        <li class="entry" [class]="'entry outcome-' + entry.outcome.toLowerCase()">
+          <mat-icon class="icon" aria-hidden="true">{{ icon(entry) }}</mat-icon>
+          <span class="visually-hidden">{{
+            entry.outcome === 'Success' ? 'Succeeded:' : 'Failed:'
+          }}</span>
+          <span class="operation">{{ operation(entry) }}</span>
+          @if (entry.outcome !== 'Success') {
+            <span class="message">{{ entry.message }}</span>
+          }
+          <span class="meta">
+            <time [attr.datetime]="entry.timestamp">{{
+              entry.timestamp | date: 'MMM d, h:mm:ss a'
+            }}</time>
+            · {{ entry.durationMs }} ms
+          </span>
+        </li>
+      }
+    </ol>
+  }
+</section>

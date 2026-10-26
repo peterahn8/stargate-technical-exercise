@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
@@ -14,6 +14,7 @@ import { Router, RouterLink } from '@angular/router';
 import { PersonAstronaut } from '../../core/api/models';
 import { PeopleService } from '../../core/api/people.service';
 import { AstronautStatus, astronautStatus, statusLabels } from '../../core/astronaut-status';
+import { RecentActivity } from '../activity/recent-activity';
 import { AddPersonDialog } from './add-person-dialog';
 
 type StatusFilter = AstronautStatus | 'all';
@@ -23,6 +24,7 @@ type StatusFilter = AstronautStatus | 'all';
   selector: 'app-people-list',
   imports: [
     DatePipe,
+    RecentActivity,
     RouterLink,
     MatButtonModule,
     MatChipsModule,
@@ -40,6 +42,7 @@ export class PeopleList {
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly activity = viewChild<RecentActivity>('activity');
 
   protected readonly people = rxResource({
     stream: () => this.peopleService.getPeople(),
@@ -101,6 +104,7 @@ export class PeopleList {
           return;
         }
         this.people.reload();
+        this.activity()?.reload();
         this.snackBar
           .open(`${name} added.`, 'View', { duration: 6000 })
           .onAction()
