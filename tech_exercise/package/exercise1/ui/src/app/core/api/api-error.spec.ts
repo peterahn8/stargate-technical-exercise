@@ -1,7 +1,7 @@
-import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
+import { HttpClient, HttpRequest, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, throwError } from 'rxjs';
 import { ApiError, apiErrorInterceptor } from './api-error';
 
 describe('[UI-3] apiErrorInterceptor', () => {
@@ -66,6 +66,17 @@ describe('[UI-3] apiErrorInterceptor', () => {
       expect(error.message).toBe("The API couldn't be reached. Is it running?");
     },
   );
+
+  it('gives a generic message for a failure that is not an HTTP error', async () => {
+    const call = firstValueFrom(
+      apiErrorInterceptor(new HttpRequest('GET', '/api/Person'), () =>
+        throwError(() => new Error('socket hang up')),
+      ),
+    );
+
+    await expect(call).rejects.toBeInstanceOf(ApiError);
+    await expect(call).rejects.toMatchObject({ message: 'An unexpected error occurred.' });
+  });
 
   it('falls back to the status code when the response has no message', async () => {
     const error = await failure((url) =>

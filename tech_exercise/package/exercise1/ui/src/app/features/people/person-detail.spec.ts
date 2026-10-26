@@ -109,6 +109,25 @@ describe('[UI-2] PersonDetail', () => {
     expect(texts('.tag-returned')).toEqual(['Returned to service']);
   });
 
+  it("shows a retired person's career end date", async () => {
+    const jack = {
+      ...george,
+      person: {
+        ...george.person,
+        name: "Jack O'Neill",
+        currentRank: 'COL',
+        currentDutyTitle: 'RETIRED',
+        careerStartDate: '2010-03-01T00:00:00',
+        careerEndDate: '2021-12-31T00:00:00',
+      },
+    };
+
+    await open("Jack O'Neill", (url) => http.expectOne(url).flush(jack));
+
+    expect(texts('.career')[0]).toContain('Mar 1, 2010 – Dec 31, 2021 · 11 years, 10 months');
+    expect(texts('.status')).toEqual(['Retired']);
+  });
+
   it('says when a person has never been an astronaut', async () => {
     const jane = {
       ...george,
@@ -214,6 +233,18 @@ describe('[UI-3] PersonDetail progress and results', () => {
 
     http.expectOne('/api/AstronautDuty/George%20Hammond').flush(george);
     await fixture.whenStable();
+  });
+
+  it("doesn't reload or confirm anything when the dialog is cancelled", async () => {
+    http.expectOne('/api/AstronautDuty/George%20Hammond').flush(george);
+    await fixture.whenStable();
+    added = undefined as unknown as NewDuty;
+
+    element().querySelector<HTMLButtonElement>('.add-duty')!.click();
+    TestBed.tick();
+
+    http.expectNone('/api/AstronautDuty/George%20Hammond');
+    expect(document.querySelector('mat-snack-bar-container')).toBeNull();
   });
 });
 

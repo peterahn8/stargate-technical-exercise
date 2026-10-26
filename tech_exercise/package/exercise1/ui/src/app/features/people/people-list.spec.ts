@@ -2,6 +2,7 @@ import { HarnessLoader } from '@angular/cdk/testing';
 import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatButtonHarness } from '@angular/material/button/testing';
 import { MatChipListboxHarness } from '@angular/material/chips/testing';
@@ -10,7 +11,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatInputHarness } from '@angular/material/input/testing';
 import { MatProgressBarHarness } from '@angular/material/progress-bar/testing';
 import { MatTableHarness } from '@angular/material/table/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { apiErrorInterceptor } from '../../core/api/api-error';
 import { PersonAstronaut } from '../../core/api/models';
@@ -33,6 +34,12 @@ function person(
   };
 }
 
+/** Stands in for the person page, so navigation can be checked through the router's URL. */
+@Component({ template: '' })
+class PersonPage {}
+
+const routes = [{ path: 'people/:name', component: PersonPage }];
+
 const people: PersonAstronaut[] = [
   person('John Doe', 'CPT', 'Commander', '2018-01-15T00:00:00'),
   person('Jane Doe', null, null, null),
@@ -51,7 +58,7 @@ describe('[UI-1] PeopleList', () => {
       providers: [
         provideHttpClient(withInterceptors([apiErrorInterceptor])),
         provideHttpClientTesting(),
-        provideRouter([]),
+        provideRouter(routes),
       ],
     });
     fixture = TestBed.createComponent(PeopleList);
@@ -151,6 +158,15 @@ describe('[UI-1] PeopleList', () => {
     expect(await loader.getAllHarnesses(MatProgressBarHarness)).toHaveLength(0);
   });
 
+  it("opens a person's page when their row is clicked", async () => {
+    await respondWith({ people, success: true });
+
+    element().querySelector<HTMLElement>('tr.row')!.click();
+    await fixture.whenStable();
+
+    expect(TestBed.inject(Router).url).toBe('/people/George%20Hammond');
+  });
+
   it("shows the API's message and retries when asked", async () => {
     await respondWith(
       { success: false, message: 'An unexpected error occurred.', responseCode: 500 },
@@ -170,19 +186,21 @@ describe('[UI-1] PeopleList', () => {
 describe('[UI-3] PeopleList progress and results', () => {
   let fixture: ComponentFixture<PeopleList>;
   let http: HttpTestingController;
+  let dialogResult: string | undefined;
 
   beforeEach(async () => {
+    dialogResult = 'Samantha Carter';
     TestBed.configureTestingModule({
       imports: [PeopleList],
       providers: [
         provideHttpClient(withInterceptors([apiErrorInterceptor])),
         provideHttpClientTesting(),
-        provideRouter([]),
+        provideRouter(routes),
         { provide: MATERIAL_ANIMATIONS, useValue: { animationsDisabled: true } },
         // The add-person dialog itself is tested in dialogs.spec.ts; here it just adds Samantha.
         {
           provide: MatDialog,
-          useValue: { open: () => ({ afterClosed: () => of('Samantha Carter') }) },
+          useValue: { open: () => ({ afterClosed: () => of(dialogResult) }) },
         },
       ],
     });
@@ -225,5 +243,31 @@ describe('[UI-3] PeopleList progress and results', () => {
 
     http.expectOne('/api/Person').flush({ people, success: true });
     await fixture.whenStable();
+  });
+
+  it("opens the new person from the snackbar's View button", async () => {
+    http.expectOne('/api/Person').flush({ people, success: true });
+    await fixture.whenStable();
+    element().querySelector<HTMLButtonElement>('.page-header button')!.click();
+    TestBed.tick();
+    http.expectOne('/api/Person').flush({ people, success: true });
+    await fixture.whenStable();
+
+    document.querySelector<HTMLButtonElement>('mat-snack-bar-container button')!.click();
+    await fixture.whenStable();
+
+    expect(TestBed.inject(Router).url).toBe('/people/Samantha%20Carter');
+  });
+
+  it('changes nothing when the dialog is cancelled', async () => {
+    http.expectOne('/api/Person').flush({ people, success: true });
+    await fixture.whenStable();
+    dialogResult = undefined;
+
+    element().querySelector<HTMLButtonElement>('.page-header button')!.click();
+    TestBed.tick();
+
+    http.expectNone('/api/Person');
+    expect(document.querySelector('mat-snack-bar-container')).toBeNull();
   });
 });
