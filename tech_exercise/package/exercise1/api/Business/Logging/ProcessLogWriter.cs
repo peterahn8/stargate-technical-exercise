@@ -10,17 +10,22 @@ namespace StargateAPI.Business.Logging
     /// <summary>Stores process log entries in the database (SPEC-5).</summary>
     public class ProcessLogWriter : IProcessLogWriter
     {
-        private readonly StargateContext _context;
+        private readonly IServiceScopeFactory _scopeFactory;
 
-        public ProcessLogWriter(StargateContext context)
+        public ProcessLogWriter(IServiceScopeFactory scopeFactory)
         {
-            _context = context;
+            _scopeFactory = scopeFactory;
         }
 
         public async Task WriteAsync(ProcessLog entry)
         {
-            _context.ProcessLogs.Add(entry);
-            await _context.SaveChangesAsync();
+            // A fresh context in its own scope: the request's context may still hold changes from a failed
+            // save, which would fail again and take the log entry with them (D17).
+            using var scope = _scopeFactory.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<StargateContext>();
+
+            context.ProcessLogs.Add(entry);
+            await context.SaveChangesAsync();
         }
     }
 }

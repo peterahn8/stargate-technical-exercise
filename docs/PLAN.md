@@ -73,7 +73,7 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 | SPEC-2 | Enforce the rules | Every `RULE-n` row is ✅. | see RULE-1…7 | — | ✅ |
 | SPEC-3 | Improve defensive coding | *Untrusted input is validated or parameterized; failures return a consistent error contract (400/404/500) without leaking internals; the build has no nullable warnings.* | T07, T19, T21–T23 | `AC=SPEC-3` · 11 | ✅ |
 | SPEC-4 | Add unit tests — identify the most impactful methods requiring tests; reach >50% code coverage | The business logic (duty handler, pre-processors, queries) is tested first; line coverage is >50%, measured with coverlet; *each test is tagged with the criteria it proves (D8).* | T09–T12, D8 | coverage 63.1% line (T12); all 34 tests tagged | ✅ |
-| SPEC-5 | Implement process logging — Log exceptions; Log successes; Store the logs in the database | Every request's success or exception is written to a database table; *a failed request's log entry survives the rollback of its transaction.* | T27–T29 | `AC=SPEC-5` · 9 | 🟡 a failed save's log entry is lost, because it's written through the same failed context (T29) |
+| SPEC-5 | Implement process logging — Log exceptions; Log successes; Store the logs in the database | Every request's success or exception is written to a database table; *a failed request's log entry survives the rollback of its transaction.* | T27–T29 | `AC=SPEC-5` · 10 | ✅ |
 
 ---
 
@@ -141,8 +141,8 @@ The spec's **Rules**, **Requirements** and **Tasks** are the acceptance criteria
 | ID | Task | Status |
 |----|------|--------|
 | T27 | Add a `ProcessLog` entity and migration: timestamp (UTC), request type, outcome, level, message, exception (unexpected errors only), duration and payload (the request as JSON), indexed by timestamp. → D17 | ✅ `77584f4` |
-| T28 | Add a MediatR `IPipelineBehavior` that logs the success or failure of each request to the database. It's registered before `AddMediatR`, because MediatR adds its own pre-processor step first and would otherwise run validation outside the logging. The unique-conflict check is shared with `ApiExceptionHandler` (`DatabaseErrors`). → D17 | ✅ |
-| T29 | Make sure exceptions caught by the global handler (T21) are logged too, and that failed requests still log after a rollback (separate context or scope). | ⬜ |
+| T28 | Add a MediatR `IPipelineBehavior` that logs the success or failure of each request to the database. It's registered before `AddMediatR`, because MediatR adds its own pre-processor step first and would otherwise run validation outside the logging. The unique-conflict check is shared with `ApiExceptionHandler` (`DatabaseErrors`). → D17 | ✅ `d9f2e86` |
+| T29 | Make sure failed requests still log after a rollback: `ProcessLogWriter` writes through a fresh context in its own scope, so a failed save's leftover changes can't take the log entry with them. (Exceptions inside MediatR are already logged by T28; errors outside it, such as malformed JSON, are deliberately not logged, per D17.) → D17 | ✅ |
 
 ### Phase 7 — Angular UI
 
